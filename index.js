@@ -81,7 +81,7 @@ console.log(JSON.stringify(nlp))
 	getUserInfo(ps_user_id, user_info => user_info = user_info);
 	postSenderAction('mark_seen', ps_user_id);	
 
-	if (nlp.entities.greetings && nlp.entities.greetings.confidence > 0.75) { 
+	if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
 		let message_payload = {
 			type: 'text',
 			payload: {
