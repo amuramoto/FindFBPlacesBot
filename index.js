@@ -48,7 +48,6 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
-console.log('PLACES: '+ JSON.stringify(messagingEvent));
         if (messagingEvent.message && !messagingEvent.message.isEcho) {          
           handleMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
@@ -82,8 +81,6 @@ function handleMessage (messagingEvent) {
 
 	getUserInfo(ps_user_id, user_info => {
 		user_info = JSON.parse(user_info);
-		console.log(user_info);
-		console.log(typeof user_info);
 		if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
 			message_payload = {
 				type: 'text',
@@ -128,25 +125,28 @@ function sendMessage (ps_user_id, type, message_payload) {
 			}
 	}
 
-	request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
-		if (!err && res.statusCode == 200) {
-      var recipientId = body.recipient_id;
-      var messageId = body.message_id;
+	postSenderAction('typing_on', ps_user_id, () => {
+		postSenderAction('typing_off', ps_user_id);
+		request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
+			if (!err && res.statusCode == 200) {
+	      var recipientId = body.recipient_id;
+	      var messageId = body.message_id;
 
-      if (messageId) {
-        console.log("Successfully sent message with id %s to recipient %s", 
-          messageId, recipientId);
-      } else {
-      console.log("Successfully called Send API for recipient %s", 
-        recipientId);
-      }
-    } else {
-      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
-    }
-	});
+	      if (messageId) {
+	        console.log("Successfully sent message with id %s to recipient %s", 
+	          messageId, recipientId);
+	      } else {
+	      console.log("Successfully called Send API for recipient %s", 
+	        recipientId);
+	      }
+	    } else {
+	      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
+	    }
+		});
+	})	
 }
 
-function postSenderAction (sender_action, ps_user_id) {
+function postSenderAction (sender_action, ps_user_id, callback) {
 	let timeout = 2500;
 	let request_body = {
 		'recipient': {
@@ -161,6 +161,10 @@ function postSenderAction (sender_action, ps_user_id) {
 
 	setTimeout(() => {
 		request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
+			if (callback) {
+				callback();
+			}
+
 			if (err) {
 				console.error(err);
 			}
