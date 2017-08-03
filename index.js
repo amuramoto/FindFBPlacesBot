@@ -6,10 +6,11 @@ const
 	app = express(),
 	crypto = require('crypto'),
 	bodyParser = require('body-parser'),
-	page_token = '',
-	validation_token = '',
-	app_secret = '',
-	search_base_url = 'https://graph.facebook.com/v2.10/search';
+	client_token = 'https://graph.facebook.com/v2.6/me/messages',
+	messenger_api_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=page_token',
+	search_api_url = 'https://graph.facebook.com/v2.10/search?';
+
+	
 
 app.use(bodyParser.urlencoded({ 
 	extended: false, 
@@ -45,13 +46,13 @@ app.post('/webhook', (req, res) => {
       // Iterate over each messaging event
       pageEntry.messaging.forEach(function(messagingEvent) {
         if (messagingEvent.message) {
-          processMessage(messagingEvent);
+          handleMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
-          processDeliveryConfirmation(messagingEvent);
+          handleDeliveryConfirmation(messagingEvent);
         } else if (messagingEvent.postback) {
-          processPostback(messagingEvent);
+          handlePostback(messagingEvent);
         } else if (messagingEvent.read) {
-          processMessageRead(messagingEvent);
+          handleMessageRead(messagingEvent);
         } else {
           console.log("Webhook received unknown messagingEvent: ", messagingEvent);
         }
@@ -63,6 +64,35 @@ app.post('/webhook', (req, res) => {
     // You must send back a 200, within 20 seconds, to let us know you've 
     // successfully received the callback. Otherwise, the request will time out.
     res.sendStatus(200);
+}
+
+function handleMessage (messagingEvent) {
+	let user_id = messagingEvent.sender.id;
+	let message_text = messagingEvent.message.text;
+
+	postSenderAction('mark_seen', user_id);	
+}
+
+function postSenderAction (sender_action, user_id) {
+	let timeout = 1500;
+	let request_body = {
+		'recipient': {
+			'id': user_id, 
+			'sender_action':sender_action
+		}
+	}
+
+	if (sender_action === 'mark_seen') {
+		timeout = 500;
+	}
+
+	setTimeout(() => {
+		request.post(messenger_api_url, request_body, (err, res, body) => {
+			if (err) {
+				console.error(err);
+			}
+		})
+	}, timeout);
 }
 
 function verifyRequestSignature(req, res, buf) {
