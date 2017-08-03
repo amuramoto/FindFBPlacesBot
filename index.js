@@ -10,7 +10,7 @@ const
 	messenger_api_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=page_token',
 	search_api_url = 'https://graph.facebook.com/v2.10/search?',
 
-	
+
 app.use(bodyParser.urlencoded({ 
 	extended: false, 
 	verify: verifyRequestSignature 
@@ -68,9 +68,43 @@ app.post('/webhook', (req, res) => {
 function handleMessage (messagingEvent) {
 	let user_id = messagingEvent.sender.id;
 	let message_text = messagingEvent.message.text;
+	let nlp = messagingEvent.message.nlp;
 
 	postSenderAction('mark_seen', user_id);	
 
+	if (nlp.entities.greetings && nlp.entities.greetings.confidence > 0.75) { 
+		
+	}
+
+}
+
+function sendMessage (user_id, type, payload) {
+	let message_body = {
+    recipient: {
+      id: user_id
+    },
+    message:{}
+  }
+
+	switch (type) {
+		case 'text':
+			message_body.message = {
+				text: payload.text,
+				payload: payload.metadata
+			}
+		case 'quick reply':
+			message_body.message = {
+				text: payload.text,
+				quick_replies: payload.quick_replies
+			}
+		default:
+			message_body.message = {
+				attachment: {
+					type: type,
+					payload: payload					
+				}
+			}
+	}
 }
 
 function postSenderAction (sender_action, user_id) {
