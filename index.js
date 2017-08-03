@@ -77,8 +77,6 @@ function handleMessage (messagingEvent) {
 	let message_text = messagingEvent.message.text;
 	let nlp = messagingEvent.message.nlp;
 
-console.log(JSON.stringify(nlp))
-
 	getUserInfo(ps_user_id, user_info => user_info = user_info);
 	postSenderAction('mark_seen', ps_user_id);	
 
@@ -106,25 +104,20 @@ function sendMessage (ps_user_id, type, message_payload) {
 
 	switch (type) {
 		case 'text':
-			request_body.message = {
-				text: message_payload.text,
-				payload: message_payload.metadata
-			}
+			request_body.message.text = message_payload.text;
+			request_body.message.payload = message_payload.metadata;			
 			break;
 
 		case 'quick reply':
-			request_body.message = {
-				text: message_payload.text,
-				quick_replies: message_payload.quick_replies
-			}
+			request_body.message.text = message_payload.text;
+			request_body.quick_replies = message_payload.quick_replies;
+			
 			break;
 		
 		default:
-			request_body.message = {
-				attachment: {
-					type: type,
-					payload: message_payload					
-				}
+			request_body.message.attachment = {				
+				type: type,
+				payload: message_payload									
 			}
 	}
 console.log(JSON.stringify(request_body));
