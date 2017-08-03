@@ -48,7 +48,8 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
-        if (messagingEvent.message) {
+console.log(messagingEvent);
+        if (messagingEvent.message && !messagingEvent.message.isEcho) {
           console.log(JSON.stringify(messagingEvent));
           handleMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
@@ -104,15 +105,15 @@ function sendMessage (ps_user_id, type, message_payload) {
 	switch (type) {
 		case 'text':
 			request_body.message = {
-				text: payload.text,
-				payload: payload.metadata
+				text: message_payload.text,
+				payload: message_payload.metadata
 			}
 			break;
 
 		case 'quick reply':
 			request_body.message = {
-				text: payload.text,
-				quick_replies: payload.quick_replies
+				text: message_payload.text,
+				quick_replies: message_payload.quick_replies
 			}
 			break;
 		
@@ -120,7 +121,7 @@ function sendMessage (ps_user_id, type, message_payload) {
 			request_body.message = {
 				attachment: {
 					type: type,
-					payload: payload					
+					payload: message_payload					
 				}
 			}
 	}
