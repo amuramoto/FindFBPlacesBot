@@ -8,9 +8,8 @@ const
 	bodyParser = require('body-parser'),
 	client_token = 'https://graph.facebook.com/v2.6/me/messages',
 	messenger_api_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=page_token',
-	search_api_url = 'https://graph.facebook.com/v2.10/search?';
+	search_api_url = 'https://graph.facebook.com/v2.10/search?',
 
-	
 
 app.use(bodyParser.urlencoded({ 
 	extended: false, 
@@ -33,18 +32,18 @@ app.get('/webhook', (req, res) => {
 });
 
 app.post('/webhook', (req, res) => {
-	var data = req.body;
+	let data = req.body;
 
   // Make sure this is a page subscription
   if (data.object == 'page') {
     // Iterate over each entry
     // There may be multiple if batched
-    data.entry.forEach(function(pageEntry) {
-      var pageID = pageEntry.id;
-      var timeOfEvent = pageEntry.time;
+    data.entry.forEach(pageEntry => {
+      let pageID = pageEntry.id;
+      let timeOfEvent = pageEntry.time;
 
       // Iterate over each messaging event
-      pageEntry.messaging.forEach(function(messagingEvent) {
+      pageEntry.messaging.forEach(messagingEvent => {
         if (messagingEvent.message) {
           handleMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
@@ -58,19 +57,20 @@ app.post('/webhook', (req, res) => {
         }
       });
     });
-
-    // Assume all went well.
-    //
-    // You must send back a 200, within 20 seconds, to let us know you've 
-    // successfully received the callback. Otherwise, the request will time out.
-    res.sendStatus(200);
-}
+  }
+  // Assume all went well.
+  //
+  // You must send back a 200, within 20 seconds, to let us know you've 
+  // successfully received the callback. Otherwise, the request will time out.
+  res.sendStatus(200);
+});
 
 function handleMessage (messagingEvent) {
 	let user_id = messagingEvent.sender.id;
 	let message_text = messagingEvent.message.text;
 
 	postSenderAction('mark_seen', user_id);	
+
 }
 
 function postSenderAction (sender_action, user_id) {
@@ -96,18 +96,18 @@ function postSenderAction (sender_action, user_id) {
 }
 
 function verifyRequestSignature(req, res, buf) {
-  var signature = req.headers["x-hub-signature"];
+  let signature = req.headers["x-hub-signature"];
 
   if (!signature) {
     // For testing, let's log an error. In production, you should throw an 
     // error.
     console.error("Couldn't validate the signature.");
   } else {
-    var elements = signature.split('=');
-    var method = elements[0];
-    var signatureHash = elements[1];
+    let elements = signature.split('=');
+    let method = elements[0];
+    let signatureHash = elements[1];
 
-    var expectedHash = crypto.createHmac('sha1', APP_SECRET)
+    let expectedHash = crypto.createHmac('sha1', APP_SECRET)
                         .update(buf)
                         .digest('hex');
 
