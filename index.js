@@ -147,18 +147,14 @@ function sendMessage (ps_user_id, type, message_payload) {
 }
 
 function postSenderAction (sender_action, ps_user_id, callback) {
-	let timeout = 2500;
+	
 	let request_body = {
 		'recipient': {
 			'id': ps_user_id, 
 			'sender_action':sender_action
 		}
 	}
-
-	if (sender_action === 'mark_seen') {
-		timeout = 1000;
-	}
-
+console.log(request_body.sender_action);
 	setTimeout(() => {
 		request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
 			if (callback) {
@@ -169,7 +165,7 @@ function postSenderAction (sender_action, ps_user_id, callback) {
 				console.error(err);
 			}
 		})
-	}, timeout);
+	}, 1000);
 }
 
 function getUserInfo (ps_user_id, callback) {
