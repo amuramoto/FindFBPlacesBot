@@ -149,10 +149,10 @@ function sendMessage (ps_user_id, type, message_payload) {
 function postSenderAction (sender_action, ps_user_id, callback) {
 console.log(sender_action);	
 	let request_body = {
-		'recipient': {
-			'id': ps_user_id 			
-		}
-		'sender_action': sender_action
+		recipient: {
+			id: ps_user_id 			
+		},
+		sender_action: sender_action
 	}
 console.log(request_body.sender_action);
 	setTimeout(() => {
