@@ -105,20 +105,20 @@ function sendMessage (ps_user_id, type, message_payload) {
 	switch (type) {
 		case 'text':
 		console.log(message_payload)
-			request_body.message.text = message_payload.text;
-			request_body.message.payload = message_payload.metadata;			
+			request_body.message.text = message_payload.payload.text;
+			request_body.message.payload = message_payload.payload.metadata;			
 			break;
 
 		case 'quick reply':
-			request_body.message.text = message_payload.text;
-			request_body.quick_replies = message_payload.quick_replies;
+			request_body.message.text = message_payload.payload.text;
+			request_body.quick_replies = message_payload.payload.quick_replies;
 			
 			break;
 		
 		default:
 			request_body.message.attachment = {				
 				type: type,
-				payload: message_payload									
+				payload: message_payload
 			}
 	}
 console.log(JSON.stringify(request_body));
