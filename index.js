@@ -81,6 +81,7 @@ function handleMessage (messagingEvent) {
 	postSenderAction('mark_seen', ps_user_id);	
 
 	if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
+console.log('ok');
 		message_payload = {
 			type: 'text',
 			payload: {
