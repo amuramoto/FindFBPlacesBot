@@ -1,6 +1,10 @@
 'use strict';
 
 const
+	app_token = process.env.APP_TOKEN,
+	app_secret = process.env.APP_SECRET,
+	page_token = process.env.PAGE_TOKEN,
+	validation_token = process.env.VALIDATION_TOKEN,
 	request = require('request'),
 	express = require('express'),
 	app = express(),
@@ -8,11 +12,7 @@ const
 	bodyParser = require('body-parser'),
 	graph_api_url = 'https://graph.facebook.com',	
 	messenger_api_url = `${graph_api_url}/v2.6/me/messages?access_token=${page_token}`,
-	place_api_url = `${graph_api_url}/v2.10/search?access_token=${app_token}`,
-	app_token = process.env.APP_TOKEN,
-	app_secret = process.env.APP_SECRET,
-	page_token = process.env.PAGE_TOKEN,
-	validation_token = process.env.VALIDATION_TOKEN;
+	place_api_url = `${graph_api_url}/v2.10/search?access_token=${app_token}`;
 
 app.use(bodyParser.urlencoded({ 
 	extended: false, 
