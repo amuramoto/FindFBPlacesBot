@@ -127,27 +127,27 @@ function sendMessage (ps_user_id, type, message_payload) {
 				}
 			}
 	}
+console.log(JSON.stringify(request_body));
+	// request.post(messenger_api_url, request_body, (err, res, body) => {
+	// 	if (!err && res.statusCode == 200) {
+ //      var recipientId = body.recipient_id;
+ //      var messageId = body.message_id;
 
-	request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
-		if (!err && res.statusCode == 200) {
-      var recipientId = body.recipient_id;
-      var messageId = body.message_id;
-
-      if (messageId) {
-        console.log("Successfully sent message with id %s to recipient %s", 
-          messageId, recipientId);
-      } else {
-      console.log("Successfully called Send API for recipient %s", 
-        recipientId);
-      }
-    } else {
-      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
-    }
-	});
+ //      if (messageId) {
+ //        console.log("Successfully sent message with id %s to recipient %s", 
+ //          messageId, recipientId);
+ //      } else {
+ //      console.log("Successfully called Send API for recipient %s", 
+ //        recipientId);
+ //      }
+ //    } else {
+ //      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
+ //    }
+	// });
 }
 
 function postSenderAction (sender_action, ps_user_id) {
-	let timeout = 1500;
+	let timeout = 2500;
 	let request_body = {
 		'recipient': {
 			'id': ps_user_id, 
@@ -156,11 +156,11 @@ function postSenderAction (sender_action, ps_user_id) {
 	}
 
 	if (sender_action === 'mark_seen') {
-		timeout = 500;
+		timeout = 1000;
 	}
 
 	setTimeout(() => {
-		request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
+		request.post(messenger_api_url, request_body, (err, res, body) => {
 			if (err) {
 				console.error(err);
 			}
