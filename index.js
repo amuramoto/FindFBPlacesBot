@@ -48,7 +48,7 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
-console.log('PLACES: '+messagingEvent);
+console.log('PLACES: '+ JSON.stringify(messagingEvent));
         if (messagingEvent.message && !messagingEvent.message.isEcho) {
           console.log(JSON.stringify(messagingEvent));
           handleMessage(messagingEvent);
