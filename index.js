@@ -92,8 +92,7 @@ console.log(JSON.stringify(nlp))
 		}
 	}
 
-	sendMessage(ps_user_id, 'text', message_payload);
-	res.sendStatus(200);
+	sendMessage(ps_user_id, 'text', message_payload);	
 
 }
 
