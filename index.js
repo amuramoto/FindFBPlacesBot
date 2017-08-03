@@ -48,13 +48,14 @@ app.post('/webhook', (req, res) => {
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
         if (messagingEvent.message) {
+          console.log(JSON.stringify(messagingEvent.message));
           handleMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
-          handleDeliveryConfirmation(messagingEvent);
+          // handleDeliveryConfirmation(messagingEvent);
         } else if (messagingEvent.postback) {
-          handlePostback(messagingEvent);
+          // handlePostback(messagingEvent);
         } else if (messagingEvent.read) {
-          handleMessageRead(messagingEvent);
+          // handleMessageRead(messagingEvent);
         } else {
           console.log("Webhook received unknown messagingEvent: ", messagingEvent);
         }
