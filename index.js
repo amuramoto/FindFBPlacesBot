@@ -126,23 +126,23 @@ function sendMessage (ps_user_id, type, message_payload) {
 	}
 
 	postSenderAction('typing_on', ps_user_id, () => {
-		// postSenderAction('typing_off', ps_user_id);
-		// request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
-		// 	if (!err && res.statusCode == 200) {
-	 //      var recipientId = body.recipient_id;
-	 //      var messageId = body.message_id;
+		postSenderAction('typing_off', ps_user_id);
+		request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
+			if (!err && res.statusCode == 200) {
+	      var recipientId = body.recipient_id;
+	      var messageId = body.message_id;
 
-	 //      if (messageId) {
-	 //        console.log("Successfully sent message with id %s to recipient %s", 
-	 //          messageId, recipientId);
-	 //      } else {
-	 //      console.log("Successfully called Send API for recipient %s", 
-	 //        recipientId);
-	 //      }
-	 //    } else {
-	 //      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
-	 //    }
-		// });
+	      if (messageId) {
+	        console.log("Successfully sent message with id %s to recipient %s", 
+	          messageId, recipientId);
+	      } else {
+	      console.log("Successfully called Send API for recipient %s", 
+	        recipientId);
+	      }
+	    } else {
+	      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
+	    }
+		});
 	})	
 }
 
