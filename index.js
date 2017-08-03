@@ -124,7 +124,7 @@ function sendMessage (ps_user_id, type, message_payload) {
 			}
 	}
 console.log(JSON.stringify(request_body));
-	request.post(messenger_api_url, request_body, (err, res, body) => {
+	request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
 		if (!err && res.statusCode == 200) {
       var recipientId = body.recipient_id;
       var messageId = body.message_id;
