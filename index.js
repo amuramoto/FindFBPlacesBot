@@ -6,10 +6,14 @@ const
 	app = express(),
 	crypto = require('crypto'),
 	bodyParser = require('body-parser'),
-	client_token = 'https://graph.facebook.com/v2.6/me/messages',
-	messenger_api_url = 'https://graph.facebook.com/v2.6/me/messages?access_token=page_token',
-	search_api_url = 'https://graph.facebook.com/v2.10/search?',
+	graph_api_url = 'https://graph.facebook.com',	
+	messenger_api_url = `${graph_api_url}/v2.6/me/messages?access_token=${page_token}`,
+	place_api_url = `${graph_api_url}/v2.10/search?access_token=${app_token}`,
 
+	app_token = process.env.APP_TOKEN,
+	app_secret = process.env.APP_SECRET,
+	page_token = process.env.PAGE_TOKEN,
+	validation_token = process.env.VALIDATION_TOKEN;
 
 app.use(bodyParser.urlencoded({ 
 	extended: false, 
@@ -66,14 +70,21 @@ app.post('/webhook', (req, res) => {
 });
 
 function handleMessage (messagingEvent) {
-	let user_id = messagingEvent.sender.id;
+	let user_info = {};
+	let ps_user_id = messagingEvent.sender.id;
 	let message_text = messagingEvent.message.text;
 	let nlp = messagingEvent.message.nlp;
 
-	postSenderAction('mark_seen', user_id);	
+	getUserInfo(ps_user_id, user_info => user_info = user_info);
+	postSenderAction('mark_seen', ps_user_id);	
 
 	if (nlp.entities.greetings && nlp.entities.greetings.confidence > 0.75) { 
-		
+		let message_payload = {
+			type: 'text',
+			payload: {
+				text: `Hi, ${user_info.first_name}! What can I do for you?`
+			}
+		}
 	}
 
 }
@@ -92,11 +103,15 @@ function sendMessage (user_id, type, payload) {
 				text: payload.text,
 				payload: payload.metadata
 			}
+			break;
+
 		case 'quick reply':
 			message_body.message = {
 				text: payload.text,
 				quick_replies: payload.quick_replies
 			}
+			break;
+		
 		default:
 			message_body.message = {
 				attachment: {
@@ -105,13 +120,30 @@ function sendMessage (user_id, type, payload) {
 				}
 			}
 	}
+
+	request.post(messenger_api_url, message_body, (err, res, body) => {
+		if (!error && response.statusCode == 200) {
+      var recipientId = body.recipient_id;
+      var messageId = body.message_id;
+
+      if (messageId) {
+        console.log("Successfully sent message with id %s to recipient %s", 
+          messageId, recipientId);
+      } else {
+      console.log("Successfully called Send API for recipient %s", 
+        recipientId);
+      }
+    } else {
+      console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
+    }
+	});
 }
 
-function postSenderAction (sender_action, user_id) {
+function postSenderAction (sender_action, ps_user_id) {
 	let timeout = 1500;
 	let request_body = {
 		'recipient': {
-			'id': user_id, 
+			'id': ps_user_id, 
 			'sender_action':sender_action
 		}
 	}
@@ -127,6 +159,15 @@ function postSenderAction (sender_action, user_id) {
 			}
 		})
 	}, timeout);
+}
+
+function getUserInfo (ps_user_id, callback) {
+	let user_fields = 'first_name, last_name, timezone, is_payment_enabled';
+	let uri = `${graph_api_url}/v2.6/${ps_user_id}?field=${user_fields}&access_token=${page_token}`;
+	
+	request.get(uri, (err, res, body) => {
+		callback(body);
+	});
 }
 
 function verifyRequestSignature(req, res, buf) {
