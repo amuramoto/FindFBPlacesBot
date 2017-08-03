@@ -49,8 +49,7 @@ app.post('/webhook', (req, res) => {
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
 console.log('PLACES: '+ JSON.stringify(messagingEvent));
-        if (messagingEvent.message && !messagingEvent.message.isEcho) {
-          console.log(JSON.stringify(messagingEvent));
+        if (messagingEvent.message && !messagingEvent.message.isEcho) {          
           handleMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
           // handleDeliveryConfirmation(messagingEvent);
@@ -76,6 +75,8 @@ function handleMessage (messagingEvent) {
 	let ps_user_id = messagingEvent.sender.id;
 	let message_text = messagingEvent.message.text;
 	let nlp = messagingEvent.message.nlp;
+
+console.log(JSON.stringify(nlp))
 
 	getUserInfo(ps_user_id, user_info => user_info = user_info);
 	postSenderAction('mark_seen', ps_user_id);	
