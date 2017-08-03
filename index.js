@@ -126,7 +126,7 @@ function sendMessage (ps_user_id, type, message_payload) {
 	}
 
 	postSenderAction('typing_on', ps_user_id, () => {
-		postSenderAction('typing_off', ps_user_id);
+		// postSenderAction('typing_off', ps_user_id);
 		request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
 			if (!err && res.statusCode == 200) {
 	      var recipientId = body.recipient_id;
