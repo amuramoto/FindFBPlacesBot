@@ -104,7 +104,7 @@ function sendMessage (ps_user_id, type, message_payload) {
 
 	switch (type) {
 		case 'text':
-		console.log('ok')
+		console.log(message_payload)
 			request_body.message.text = message_payload.text;
 			request_body.message.payload = message_payload.metadata;			
 			break;
