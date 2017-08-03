@@ -77,7 +77,10 @@ function handleMessage (messagingEvent) {
 	let message_text = messagingEvent.message.text;
 	let nlp = messagingEvent.message.nlp;
 
-	getUserInfo(ps_user_id, user_info => user_info = user_info);
+	getUserInfo(ps_user_id, user_info => {
+		user_info = user_info
+		console.log(user_info);
+	});
 	postSenderAction('mark_seen', ps_user_id);	
 
 	if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
