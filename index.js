@@ -9,7 +9,6 @@ const
 	graph_api_url = 'https://graph.facebook.com',	
 	messenger_api_url = `${graph_api_url}/v2.6/me/messages?access_token=${page_token}`,
 	place_api_url = `${graph_api_url}/v2.10/search?access_token=${app_token}`,
-
 	app_token = process.env.APP_TOKEN,
 	app_secret = process.env.APP_SECRET,
 	page_token = process.env.PAGE_TOKEN,
