@@ -77,23 +77,21 @@ function handleMessage (messagingEvent) {
 	let message_text = messagingEvent.message.text;
 	let nlp = messagingEvent.message.nlp;
 
-	getUserInfo(ps_user_id, user_info => {
-		user_info = user_info
-		console.log(user_info);
-	});
+
 	postSenderAction('mark_seen', ps_user_id);	
 
-	if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
-		message_payload = {
-			type: 'text',
-			payload: {
-				text: `Hi, ${user_info.first_name}! What can I do for you?`,
-				metadata: 'test'
+	getUserInfo(ps_user_id, user_info => {
+		if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
+			message_payload = {
+				type: 'text',
+				payload: {
+					text: `Hi, ${user_info.first_name}! What can I do for you?`,
+					metadata: 'test'
+				}
 			}
 		}
-	}
-
-	sendMessage(ps_user_id, 'text', message_payload);	
+		sendMessage(ps_user_id, 'text', message_payload);	
+	});
 
 }
 
