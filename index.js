@@ -71,6 +71,7 @@ console.log('PLACES: '+ JSON.stringify(messagingEvent));
 });
 
 function handleMessage (messagingEvent) {
+	let message_payload = {};
 	let user_info = {};
 	let ps_user_id = messagingEvent.sender.id;
 	let message_text = messagingEvent.message.text;
@@ -82,7 +83,7 @@ console.log(JSON.stringify(nlp))
 	postSenderAction('mark_seen', ps_user_id);	
 
 	if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
-		let message_payload = {
+		message_payload = {
 			type: 'text',
 			payload: {
 				text: `Hi, ${user_info.first_name}! What can I do for you?`,
