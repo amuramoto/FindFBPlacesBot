@@ -81,38 +81,41 @@ function handleMessage (messagingEvent) {
 		let message_payload = {
 			type: 'text',
 			payload: {
-				text: `Hi, ${user_info.first_name}! What can I do for you?`
+				text: `Hi, ${user_info.first_name}! What can I do for you?`,
+				metadata: 'test'
 			}
 		}
 	}
 
+	sendMessage(ps_user_id, 'text', message_payload);
+
 }
 
-function sendMessage (user_id, type, payload) {
-	let message_body = {
+function sendMessage (ps_user_id, type, message_payload) {
+	let request_body = {
     recipient: {
-      id: user_id
+      id: ps_user_id
     },
     message:{}
   }
 
 	switch (type) {
 		case 'text':
-			message_body.message = {
+			request_body.message = {
 				text: payload.text,
 				payload: payload.metadata
 			}
 			break;
 
 		case 'quick reply':
-			message_body.message = {
+			request_body.message = {
 				text: payload.text,
 				quick_replies: payload.quick_replies
 			}
 			break;
 		
 		default:
-			message_body.message = {
+			request_body.message = {
 				attachment: {
 					type: type,
 					payload: payload					
