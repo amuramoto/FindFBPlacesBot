@@ -105,15 +105,16 @@ function sendMessage (ps_user_id, type, message_payload) {
 	switch (type) {
 		case 'text':
 			request_body.message = {
-				text: message_payload.payload.text;
-				metadata: message_payload.payload.metadata;			
+				text: message_payload.payload.text,
+				metadata: message_payload.payload.metadata
 			}
 			break;
 
 		case 'quick reply':
-			request_body.message.text = message_payload.payload.text;
-			request_body.quick_replies = message_payload.payload.quick_replies;
-			
+			request_body.message = {
+				text: message_payload.payload.text,
+				quick_replies: message_payload.payload.quick_replies
+			}
 			break;
 		
 		default:
