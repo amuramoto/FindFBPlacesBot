@@ -5,6 +5,7 @@ const
 	app_secret = process.env.APP_SECRET,
 	page_token = process.env.PAGE_TOKEN,
 	validation_token = process.env.VALIDATION_TOKEN,
+	page_id = process.env.PAGE_ID,
 	request = require('request'),
 	express = require('express'),
 	app = express(),
@@ -47,7 +48,7 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
-        if (messagingEvent.message) {
+        if (messagingEvent.message && messagingEvent.recipient.id != page_id) {
           console.log(JSON.stringify(messagingEvent));
           handleMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
