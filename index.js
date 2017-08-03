@@ -130,7 +130,7 @@ function sendMessage (ps_user_id, type, message_payload) {
 	}
 
 	request.post(messenger_api_url, request_body, (err, res, body) => {
-		if (!error && response.statusCode == 200) {
+		if (!err && res.statusCode == 200) {
       var recipientId = body.recipient_id;
       var messageId = body.message_id;
 
@@ -142,7 +142,7 @@ function sendMessage (ps_user_id, type, message_payload) {
         recipientId);
       }
     } else {
-      console.error("Failed calling Send API", response.statusCode, response.statusMessage, body.error);
+      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
     }
 	});
 }
