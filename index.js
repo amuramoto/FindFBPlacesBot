@@ -59,10 +59,10 @@ console.log(JSON.stringify(messagingEvent));
           handleTextMessage(ps_user_id, messagingEvent);
         } else if (messagingEvent.message.attachments) {          
           handleAttachmentMessage(ps_user_id, messagingEvent)
-        } else if (ps_user_id, messagingEvent.postback) {
+        } else if (messagingEvent.message.quick_reply) {
+          handleQuickReply(ps_user_id, messagingEvent);
+        } else if (messagingEvent.postback) {
           handlePostback(messagingEvent);
-        } else if (messagingEvent.read) {
-          // handleMessageRead(messagingEvent);
         } else {
           console.log("Webhook received unknown messagingEvent: ", messagingEvent);
         }
@@ -98,39 +98,89 @@ function handleTextMessage (ps_user_id, messagingEvent) {
         type: 'text',
         payload: {
           text: `Hi, ${user_info.first_name}! I'm the PlacesBot. I can 
-          find businesses near you. Wanna get started?`,
-          metadata: 'test'
+          find businesses near you. Wanna get started?`
         }
       }
       sendMessage(ps_user_id, 'text', message_payload);    
     });
-  } else if (nlp.intent 
-                && nlp.intent[0].value == 'affirmative' 
-                && nlp.intent[0].confidence > 0.75) {
-    //check what they user is affirming
-    switch (userCache[ps_user_id].state) {
-      case 'greetings': 
+  } else if (nlp.intent) {
+    let nlp_value = nlp.intent[0].value;
+    let nlp_confidence = nlp.intent[0].confidence
+    
+    if (nlp_value == 'affirmative' && nlp_confidence > 0.75) {
+      //check what they user is affirming
+      switch (userCache[ps_user_id].state) {
+        case 'greetings': 
+          
+          message_payload = {
+            type: 'quick reply',
+            payload: {
+              text: `Sweeeeet. Let's start by getting your location.`,
+              quick_replies: [
+                { "content_type":"location" }
+              ]
+            }          
+          }
+          sendMessage(ps_user_id, 'quick reply', message_payload);
+          break;
+      }
+    } else if (nlp_value == 'local_search_query' && nlp_confidence > 0.75) {
+      
+      message_payload = {
+        type: 'text',
+        payload: 'Ok, I\'m on it. Give me just a second.'
+      }
+      sendMessage(ps_user_id, 'text', message_payload);
+      
+      // getPlaces( (place_info) => {
+
+      // })
+
+
+
+// let location = messagingEvent.quick_reply.payload.location;
+//     let search_radius = messagingEvent.quick_reply.payload.search_radius;
+//     switch (nlp.distance[0].unit) {
+//       case 'mile':
+//         search_radius = search_radius * 1609;
+//         break;
+
+//       case 'kilometer':
+//         search_radius = search_radius * 1.6;
+//         break;
+//     }
+
+
+
+    } 
+  }
+}
+
+function handleQuickReply (ps_user_id, messagingEvent) {
+  let message_payload;
+  let nlp = messagingEvent.message.nlp.entities;
+  if (nlp.distance && nlp.distance[0].confidence > 0.75) {     
         
-        message_payload = {
-          type: 'quick reply',
-          payload: {
-            text: `Sweeeeet. Let's start by getting your location.`,
-            quick_replies: [
-              { "content_type":"location" }
-            ]
-          }          
+
+    message_payload = {
+      type: text,
+      payload: {
+        text: 'Alright, last thing. What kind of food are you looking for?',
+        metadata: {
+
         }
-        sendMessage(ps_user_id, 'quick reply', message_payload);
-        break;
+      }
     }
-  } 
-  
+
+    sendMessage(ps_user_id, 'text', message_payload);    
+
+  }
 }
 
 function handleAttachmentMessage (ps_user_id, messagingEvent) {
   let location;
   let message_payload;
-  if (messagingEvent.message.attachments[0].type == 'location') {
+  if (messagingEvent.message.attachments[0].type == 'location') {    
     location = messagingEvent.message.attachments[0].payload.coordinates;
     message_payload = {
       type: 'quick reply',
@@ -140,22 +190,34 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
           {
             content_type: 'text',
             title: '0.5 miles',
-            payload: 0.5
+            payload: {
+              location: location, 
+              search_radius: 0.5
+            }
           },
           {
             content_type: 'text',
             title: '1 mile',
-            payload: 1
+            payload: {
+              location: location, 
+              search_radius: 1
+            }
           },
           {
             content_type: 'text',
             title: '3 miles',
-            payload: 3
+            payload: {
+              location: location, 
+              search_radius: 3
+            }
           },
           {
             content_type: 'text',
             title: '5 miles',
-            payload: 5
+            payload: {
+              location: location, 
+              search_radius: 5
+            }
           }
         ]
       }
