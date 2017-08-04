@@ -202,7 +202,7 @@ function getUserInfo (ps_user_id, callback) {
   let uri = `${graph_api_uri}/v2.6/${ps_user_id}?field=${user_fields}&access_token=${page_token}`;
   
   request.get(uri, (err, res, body) => {
-    callback(body);
+    callback(JSON.parse(body));
   });
 }
 
