@@ -52,12 +52,14 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
-console.log(JSON.stringify(messagingEvent))        
-        if (messagingEvent.message.text && !messagingEvent.message.isEcho) {          
-          handleTextMessage(messagingEvent);
-        } else if (messagingEvent.delivery) {
-          // handleDeliveryConfirmation(messagingEvent);
-        } else if (messagingEvent.postback) {
+
+        let ps_user_id = messagingEvent.sender.id;
+
+        if (messagingEvent.message.text) {          
+          handleTextMessage(ps_user_id, messagingEvent);
+        } else if (messagingEvent.message.attachments) {          
+          handleAttachmentMessage(ps_user_id, messagingEvent)
+        } else if (ps_user_id, messagingEvent.postback) {
           handlePostback(messagingEvent);
         } else if (messagingEvent.read) {
           // handleMessageRead(messagingEvent);
@@ -77,7 +79,6 @@ console.log(JSON.stringify(messagingEvent))
 function handleTextMessage (messagingEvent) { 
   let message_payload = {};
   let user_info = {};
-  let ps_user_id = messagingEvent.sender.id;
   let message_text = messagingEvent.message.text;
   let nlp = messagingEvent.message.nlp.entities;
 
@@ -92,6 +93,7 @@ function handleTextMessage (messagingEvent) {
   if (nlp.greetings && nlp.greetings[0].confidence > 0.75) { 
     getUserInfo(ps_user_id, user_info => {
       logUserState(ps_user_id, 'state', 'greetings');
+      logUserState(ps_user_id, 'user_info', user_info);
       message_payload = {
         type: 'text',
         payload: {
@@ -101,7 +103,7 @@ function handleTextMessage (messagingEvent) {
         }
       }
       sendMessage(ps_user_id, 'text', message_payload);    
-    })
+    });
   } else if (nlp.intent 
                 && nlp.intent[0].value == 'affirmative' 
                 && nlp.intent[0].confidence > 0.75) {
@@ -121,8 +123,15 @@ function handleTextMessage (messagingEvent) {
         sendMessage(ps_user_id, 'quick reply', message_payload);
         break;
     }
-  } else if (messagingEvent.message.attachments) {
-    let location = messagingEvent.message.attachments[0].payload.coordinates;
+  } 
+  
+}
+
+function handleAttachmentMessage (ps_user_id, messagingEvent) {
+  let location;
+
+  if (messagingEvent.message.attachments[0].type == 'location') {
+    location = messagingEvent.message.attachments[0].payload.coordinates;
     message_payload = {
       type: 'text',
       payload: {
@@ -151,10 +160,9 @@ function handleTextMessage (messagingEvent) {
         ]
       }
     }
+    sendMessage(ps_user_id, 'button template', message_payload);
   }
-  
 }
-
 
 function logUserState (ps_user_id, key, value) {
   if (!userCache[ps_user_id]) {
@@ -223,7 +231,7 @@ function sendMessage (ps_user_id, type, message_payload) {
   
 }
 
-function handlePostback(messagingEvent) {
+function handlePostback(ps_user_id, messagingEvent) {
   console.log(JSON.stringify(messagingEvent))
 }
 
