@@ -225,7 +225,7 @@ console.log(JSON.stringify(request_body));
         recipientId);
       }
     } else {
-      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
+      console.error("Failed calling Send API", res.statusCode, res.statusMessage, JSON.parse(body).error);
     }
   });
   
