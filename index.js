@@ -220,6 +220,7 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
         ]
       }
     }
+
     sendMessage(ps_user_id, 'quick reply', message_payload);
   }
 }
@@ -252,6 +253,7 @@ function sendMessage (ps_user_id, type, message_payload) {
         text: message_payload.payload.text,
         quick_replies: message_payload.payload.quick_replies
       }
+console.log(JSON.stringify(request_body))          
       break;
     case 'button template':
       request_body.message = {
