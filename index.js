@@ -203,7 +203,7 @@ function sendMessage (ps_user_id, type, message_payload) {
           }
         }      
       }
-console.log(request_body.message);      
+console.log(JSON.stringify(request_body));      
       break;
     default:
       request_body.message.attachment = {       
