@@ -93,7 +93,6 @@ console.log(JSON.stringify(nlp));
       
   if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
     getUserInfo(ps_user_id, user_info => {
-console.log('OK');      
       logUserState(ps_user_id, 'greetings')
       message_payload = {
         type: 'text',
@@ -109,6 +108,7 @@ console.log('OK');
                 && nlp.entities.intent[0].confidence > 0.75) {
     switch (userCache[ps_user_id]) {
       case 'greetings': 
+console.log('OK');            
         message_payload = {
           type: 'quick reply',
           payload: {
