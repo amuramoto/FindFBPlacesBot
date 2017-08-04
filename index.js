@@ -139,22 +139,22 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
           {
             type: 'postback',
             title: '0.5 miles',
-            payload: 0.5
+            payload: '0.5'
           },
           {
             type: 'postback',
             title: '1 mile',
-            payload: 1
+            payload: '1'
           },
           {
             type: 'postback',
             title: '3 miles',
-            payload: 3
+            payload: '3'
           },
           {
             type: 'postback',
             title: '5 miles',
-            payload: 5
+            payload: '5'
           }
         ]
       }
