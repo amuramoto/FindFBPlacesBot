@@ -175,7 +175,7 @@ function getUserInfo (ps_user_id, callback) {
 	});
 }
 
-getPlaces (location, category, query, callback) {
+function getPlaces (location, category, query, callback) {
 
 	let api_uri = `${place_api_uri}?type=place&q=mexican&categories=["FOOD_BEVERAGE"]`
 
