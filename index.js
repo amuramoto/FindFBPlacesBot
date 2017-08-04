@@ -57,7 +57,7 @@ app.post('/webhook', (req, res) => {
         } else if (messagingEvent.delivery) {
           // handleDeliveryConfirmation(messagingEvent);
         } else if (messagingEvent.postback) {
-          // handlePostback(messagingEvent);
+          handlePostback(messagingEvent);
         } else if (messagingEvent.read) {
           // handleMessageRead(messagingEvent);
         } else {
@@ -80,11 +80,8 @@ function handleMessage (messagingEvent) {
   let message_text = messagingEvent.message.text;
   let nlp = messagingEvent.message.nlp.entities;
 
-console.log(JSON.stringify(nlp));
-
   setTimeout(() => {
-    postSenderAction('mark_seen', ps_user_id);  
-  
+    postSenderAction('mark_seen', ps_user_id);    
     setTimeout(() => {
       postSenderAction('typing_on', ps_user_id)
     }, 2000);
@@ -93,7 +90,7 @@ console.log(JSON.stringify(nlp));
       
   if (nlp.greetings && nlp.greetings[0].confidence > 0.75) { 
     getUserInfo(ps_user_id, user_info => {
-      logUserState(ps_user_id, 'greetings')
+      logUserState(ps_user_id, 'state', 'greetings');
       message_payload = {
         type: 'text',
         payload: {
@@ -107,7 +104,7 @@ console.log(JSON.stringify(nlp));
   } else if (nlp.intent 
                 && nlp.intent[0].value == 'affirmative' 
                 && nlp.intent[0].confidence > 0.75) {
-console.log('OK');    
+    //check what they user is affirming
     switch (userCache[ps_user_id].state) {
       case 'greetings': 
         
@@ -123,15 +120,43 @@ console.log('OK');
         sendMessage(ps_user_id, 'quick reply', message_payload);
         break;
     }
+  } else if (messagingEvent.message.attachments) {
+    let location = messagingEvent.message.attachments[0].payload.coordinates;
+    message_payload = {
+      type: 'text',
+      payload: {
+        text: 'Ok, thanks! How far do you want me to search from where you are?',
+        buttons:[
+          {
+            type: 'postback',
+            title: '0.5 miles',
+            payload: 0.5
+          },
+          {
+            type: 'postback',
+            title: '1 mile',
+            payload: 1
+          },
+          {
+            type: 'postback',
+            title: '3 miles',
+            payload: 3
+          },
+          {
+            type: 'postback',
+            title: '5 miles',
+            payload: 5
+          }
+        ]
+      }
+    }
   }
-
   
 }
 
 
-function logUserState (ps_user_id, state) {
-  userCache[ps_user_id] = {state: state};
-console.log(userCache[ps_user_id]);
+function logUserState (ps_user_id, key, value) {
+  userCache[ps_user_id][key] = value;
 }
 
 function sendMessage (ps_user_id, type, message_payload) {
@@ -156,7 +181,18 @@ function sendMessage (ps_user_id, type, message_payload) {
         quick_replies: message_payload.payload.quick_replies
       }
       break;
-    
+    case 'button template':
+      request_body.message = {
+        attachment:{
+          type:"template",
+          payload:{
+            template_type:"button",
+            text: message_payload.payload.text,
+            buttons: message_payload.payload.buttons
+          }
+        }      
+      }
+      break;
     default:
       request_body.message.attachment = {       
         type: type,
@@ -181,6 +217,10 @@ function sendMessage (ps_user_id, type, message_payload) {
     }
   });
   
+}
+
+function handlePostback(messagingEvent) {
+
 }
 
 function postSenderAction (sender_action, ps_user_id, callback) {
