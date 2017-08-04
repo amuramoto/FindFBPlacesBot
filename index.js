@@ -102,6 +102,7 @@ console.log(JSON.stringify(nlp));
           metadata: 'test'
         }
       }
+      sendMessage(ps_user_id, 'text', message_payload);    
     })
   } else if (nlp.entities.affirmative && nlp.entities.affirmative[0].confidence > 0.75) {
     switch (userCache[ps_user_id]) {
@@ -114,12 +115,13 @@ console.log(JSON.stringify(nlp));
               { "content_type":"location" }
             ]
           }
+          sendMessage(ps_user_id, 'quick reply', message_payload);
         }
         break;
     }
   }
 
-  sendMessage(ps_user_id, 'text', message_payload);    
+  
 }
 
 
