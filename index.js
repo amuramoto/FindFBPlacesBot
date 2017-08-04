@@ -114,9 +114,9 @@ console.log(JSON.stringify(nlp));
             quick_replies: [
               { "content_type":"location" }
             ]
-          }
-          sendMessage(ps_user_id, 'quick reply', message_payload);
+          }          
         }
+        sendMessage(ps_user_id, 'quick reply', message_payload);
         break;
     }
   }
