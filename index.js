@@ -160,15 +160,13 @@ function handleQuickReply (ps_user_id, messagingEvent) {
   let message_payload;
   let nlp = messagingEvent.message.nlp.entities;
   if (nlp.distance && nlp.distance[0].confidence > 0.75) {     
-        
+            
 
     message_payload = {
       type: text,
       payload: {
         text: 'Alright, last thing. What kind of food are you looking for?',
-        metadata: {
-
-        }
+        metadata: messagingEvent.message.quick_reply.payload
       }
     }
 
