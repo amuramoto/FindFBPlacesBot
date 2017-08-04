@@ -133,33 +133,34 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
   if (messagingEvent.message.attachments[0].type == 'location') {
     location = messagingEvent.message.attachments[0].payload.coordinates;
     message_payload = {
+      type: 'quick reply',
       payload: {
         text: 'Ok, thanks! How far do you want me to search from where you are?',
-        buttons:[
+        quick_replies:[
           {
-            type: 'postback',
+            content_type: 'postback',
             title: '0.5 miles',
-            payload: '0.5'
+            payload: 0.5
           },
           {
-            type: 'postback',
+            content_type: 'postback',
             title: '1 mile',
-            payload: '1'
+            payload: 1
           },
           {
-            type: 'postback',
+            content_type: 'postback',
             title: '3 miles',
-            payload: '3'
+            payload: 3
           },
           {
-            type: 'postback',
+            content_type: 'postback',
             title: '5 miles',
-            payload: '5'
+            payload: 5
           }
         ]
       }
     }
-    sendMessage(ps_user_id, 'button template', message_payload);
+    sendMessage(ps_user_id, 'quick reply', message_payload);
   }
 }
 
