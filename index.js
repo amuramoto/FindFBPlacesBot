@@ -11,9 +11,9 @@ const
 	app = express(),
 	crypto = require('crypto'),
 	bodyParser = require('body-parser'),
-	graph_api_url = 'https://graph.facebook.com',	
-	messenger_api_url = `${graph_api_url}/v2.6/me/messages?access_token=${page_token}`,
-	place_api_url = `${graph_api_url}/v2.10/search?access_token=${app_token}`;
+	graph_api_uri = 'https://graph.facebook.com',	
+	messenger_api_uri = `${graph_api_uri}/v2.6/me/messages?access_token=${page_token}`,
+	place_api_uri = `${graph_api_uri}/v2.10/search?access_token=${app_token}`;
 
 app.use(bodyParser.urlencoded({ 
 	extended: false, 
@@ -75,9 +75,14 @@ function handleMessage (messagingEvent) {
 	let ps_user_id = messagingEvent.sender.id;
 	let message_text = messagingEvent.message.text;
 	let nlp = messagingEvent.message.nlp;
-
-
-	postSenderAction('mark_seen', ps_user_id);	
+console.log(JSON.stringify(nlp));
+	setTimeout(() => {
+		postSenderAction('mark_seen', ps_user_id);	
+	
+		setTimeout(() => {
+			postSenderAction('typing_on', ps_user_id)
+		}, 2000);
+	}, 1500);
 
 	getUserInfo(ps_user_id, user_info => {
 		user_info = JSON.parse(user_info);
@@ -125,25 +130,23 @@ function sendMessage (ps_user_id, type, message_payload) {
 			}
 	}
 
-	postSenderAction('typing_on', ps_user_id, () => {
-		// postSenderAction('typing_off', ps_user_id);
-		request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
-			if (!err && res.statusCode == 200) {
-	      var recipientId = body.recipient_id;
-	      var messageId = body.message_id;
+	request.post(messenger_api_uri, {form: request_body}, (err, res, body) => {
+		if (!err && res.statusCode == 200) {
+      var recipientId = body.recipient_id;
+      var messageId = body.message_id;
 
-	      if (messageId) {
-	        console.log("Successfully sent message with id %s to recipient %s", 
-	          messageId, recipientId);
-	      } else {
-	      console.log("Successfully called Send API for recipient %s", 
-	        recipientId);
-	      }
-	    } else {
-	      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
-	    }
-		});
-	})	
+      if (messageId) {
+        console.log("Successfully sent message with id %s to recipient %s", 
+          messageId, recipientId);
+      } else {
+      console.log("Successfully called Send API for recipient %s", 
+        recipientId);
+      }
+    } else {
+      console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
+    }
+	});
+	
 }
 
 function postSenderAction (sender_action, ps_user_id, callback) {
@@ -155,31 +158,27 @@ function postSenderAction (sender_action, ps_user_id, callback) {
 		sender_action: sender_action
 	}
 
-	if (sender_action = 'mark_seen') {
-		timeout = 2000;
-	}
-	setTimeout(() => {
-		request.post(messenger_api_url, {form: request_body}, (err, res, body) => {
-			if (callback) {
-				setTimeout(() => {
-					callback();
-				}, 4000);				
-			}
-
-			if (err) {
-				console.error(err);
-			}
-		})
-	}, timeout);
+	request.post(messenger_api_uri, {form: request_body}, (err, res, body) => {
+		
+		if (err) {
+			console.error(err);
+		}
+	})
 }
 
 function getUserInfo (ps_user_id, callback) {
 	let user_fields = 'first_name, last_name, timezone, is_payment_enabled';
-	let uri = `${graph_api_url}/v2.6/${ps_user_id}?field=${user_fields}&access_token=${page_token}`;
+	let uri = `${graph_api_uri}/v2.6/${ps_user_id}?field=${user_fields}&access_token=${page_token}`;
 	
 	request.get(uri, (err, res, body) => {
 		callback(body);
 	});
+}
+
+getPlaces (location, category, query, callback) {
+
+	let api_uri = `${place_api_uri}?type=place&q=mexican&categories=["FOOD_BEVERAGE"]`
+
 }
 
 function verifyRequestSignature(req, res, buf) {
