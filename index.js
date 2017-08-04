@@ -74,13 +74,13 @@ app.post('/webhook', (req, res) => {
   res.sendStatus(200);
 });
 
-function handleMessage (messagingEvent) {
-userCache.set(ps_user_id);	
+function handleMessage (messagingEvent) {	
 	let message_payload = {};
 	let user_info = {};
 	let ps_user_id = messagingEvent.sender.id;
 	let message_text = messagingEvent.message.text;
 	let nlp = messagingEvent.message.nlp;
+userCache.set(ps_user_id);
 console.log(JSON.stringify(nlp));
 	setTimeout(() => {
 		postSenderAction('mark_seen', ps_user_id);	
