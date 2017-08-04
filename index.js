@@ -52,6 +52,7 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
+console.log(JSON.stringify(messagingEvent))        
         if (messagingEvent.message.text && !messagingEvent.message.isEcho) {          
           handleTextMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
