@@ -129,7 +129,7 @@ function handleTextMessage (ps_user_id, messagingEvent) {
 
 function handleAttachmentMessage (ps_user_id, messagingEvent) {
   let location;
-
+  let message_payload;
   if (messagingEvent.message.attachments[0].type == 'location') {
     location = messagingEvent.message.attachments[0].payload.coordinates;
     message_payload = {
