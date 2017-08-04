@@ -1,29 +1,28 @@
 'use strict';
 
 const
-	request = require('request'),
-	express = require('express'),
-	cache = require('node-cache'),
-	crypto = require('crypto'),
-	bodyParser = require('body-parser'),
-	userCache = new cache(),
-	app = express();
+  request = require('request'),
+  express = require('express'), 
+  crypto = require('crypto'),
+  bodyParser = require('body-parser'),  
+  app = express();
 
 const
-	app_token = process.env.APP_TOKEN,
-	app_secret = process.env.APP_SECRET,
-	page_token = process.env.PAGE_TOKEN,
-	validation_token = process.env.VALIDATION_TOKEN,
-	page_id = process.env.PAGE_ID; 	
+  app_token = process.env.APP_TOKEN,
+  app_secret = process.env.APP_SECRET,
+  page_token = process.env.PAGE_TOKEN,
+  validation_token = process.env.VALIDATION_TOKEN,
+  page_id = process.env.PAGE_ID;  
 
-const	
-	graph_api_uri = 'https://graph.facebook.com',	
-	messenger_api_uri = `${graph_api_uri}/v2.6/me/messages?access_token=${page_token}`,
-	place_api_uri = `${graph_api_uri}/v2.10/search?access_token=${app_token}`;
+const 
+  graph_api_uri = 'https://graph.facebook.com', 
+  messenger_api_uri = `${graph_api_uri}/v2.6/me/messages?access_token=${page_token}`,
+  place_api_uri = `${graph_api_uri}/v2.10/search?access_token=${app_token}`,
+  userCache = {};
 
 app.use(bodyParser.urlencoded({ 
-	extended: false, 
-	verify: verifyRequestSignature 
+  extended: false, 
+  verify: verifyRequestSignature 
 }));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/www'));
@@ -41,7 +40,7 @@ app.get('/webhook', (req, res) => {
 });
 
 app.post('/webhook', (req, res) => {
-	let data = req.body;
+  let data = req.body;
 
   // Make sure this is a page subscription
   if (data.object == 'page') {
@@ -74,84 +73,92 @@ app.post('/webhook', (req, res) => {
   res.sendStatus(200);
 });
 
-function handleMessage (messagingEvent) {	
-	let message_payload = {};
-	let user_info = {};
-	let ps_user_id = messagingEvent.sender.id;
-	let message_text = messagingEvent.message.text;
-	let nlp = messagingEvent.message.nlp;
-userCache.del(ps_user_id);
-console.log(userCache.get(ps_user_id))
-userCache.set(ps_user_id);
+function handleMessage (messagingEvent) { 
+  let message_payload = {};
+  let user_info = {};
+  let ps_user_id = messagingEvent.sender.id;
+  let message_text = messagingEvent.message.text;
+  let nlp = messagingEvent.message.nlp;
 
-userCache.set(ps_user_id,{foo: 'bar'});
-console.log(userCache.get(ps_user_id))
 console.log(JSON.stringify(nlp));
-	setTimeout(() => {
-		postSenderAction('mark_seen', ps_user_id);	
-	
-		setTimeout(() => {
-			postSenderAction('typing_on', ps_user_id)
-		}, 2000);
-	}, 1500);
 
-	getUserInfo(ps_user_id, user_info => {
-		user_info = JSON.parse(user_info);
-		if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
-			message_payload = {
-				type: 'text',
-				payload: {
-					text: `Hi, ${user_info.first_name}! I'm the PlacesBot. I can 
-						find businesses near you. Wanna get started?`,
-					metadata: 'test'
-				}
-			}
-		}
-		// sendMessage(ps_user_id, 'text', message_payload);	
-	});
+  setTimeout(() => {
+    postSenderAction('mark_seen', ps_user_id);  
+  
+    setTimeout(() => {
+      postSenderAction('typing_on', ps_user_id)
+    }, 2000);
+  }, 1500);
 
+      
+  if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
+    getUserInfo(ps_user_id, user_info => {
+      logUserState(ps_user_id, 'greetings')
+      message_payload = {
+        type: 'text',
+        payload: {
+          text: `Hi, ${user_info.first_name}! I'm the PlacesBot. I can 
+            find businesses near you. Wanna get started?`,
+          metadata: 'test'
+        }
+      }
+    })
+  } else if (nlp.entities.affirmative && nlp.entities.affirmative[0].confidence > 0.75) {
+    switch (userCache[ps_user_id]) {
+      case 'greetings': 
+        message_payload = {
+          type: 'quick reply',
+          payload: {
+            text: `Sweeeeet. Let's start by getting your location.`,
+            quick_replies: [
+              { "content_type":"location" }
+            ]
+          }
+        }
+        break;
+    }
+  }
+
+  sendMessage(ps_user_id, 'text', message_payload);    
 }
 
-function createUserCache(ps_user_id) {
-	userCache.set(ps_user_id);
-}
 
-function logUserState () {
-
+function logUserState (ps_user_id, state) {
+  userCache[ps_user_id] = {state: state};
 }
 
 function sendMessage (ps_user_id, type, message_payload) {
-	let request_body = {
+  let request_body = {
     recipient: {
       id: ps_user_id
     },
     message:{}
   }
 
-	switch (type) {
-		case 'text':
-			request_body.message = {
-				text: message_payload.payload.text,
-				metadata: message_payload.payload.metadata
-			}
-			break;
+  switch (type) {
+    case 'text':
+      request_body.message = {
+        text: message_payload.payload.text,
+        metadata: message_payload.payload.metadata
+      }
+      break;
 
-		case 'quick reply':
-			request_body.message = {
-				text: message_payload.payload.text,
-				quick_replies: message_payload.payload.quick_replies
-			}
-			break;
-		
-		default:
-			request_body.message.attachment = {				
-				type: type,
-				payload: message_payload
-			}
-	}
+    case 'quick reply':
+      request_body.message = {
+        text: message_payload.payload.text,
+        quick_replies: message_payload.payload.quick_replies
+      }
+      break;
+    
+    default:
+      request_body.message.attachment = {       
+        type: type,
+        payload: message_payload
+      }
+  }
 
-	request.post(messenger_api_uri, {form: request_body}, (err, res, body) => {
-		if (!err && res.statusCode == 200) {
+  request.post(messenger_api_uri, {form: request_body}, (err, res, body) => {
+    if (!err && res.statusCode == 200) {
       var recipientId = body.recipient_id;
       var messageId = body.message_id;
 
@@ -165,39 +172,39 @@ function sendMessage (ps_user_id, type, message_payload) {
     } else {
       console.error("Failed calling Send API", res.statusCode, res.statusMessage, body.error);
     }
-	});
-	
+  });
+  
 }
 
 function postSenderAction (sender_action, ps_user_id, callback) {
-	let timeout = 0;
-	let request_body = {
-		recipient: {
-			id: ps_user_id 			
-		},
-		sender_action: sender_action
-	}
+  let timeout = 0;
+  let request_body = {
+    recipient: {
+      id: ps_user_id      
+    },
+    sender_action: sender_action
+  }
 
-	request.post(messenger_api_uri, {form: request_body}, (err, res, body) => {
-		
-		if (err) {
-			console.error(err);
-		}
-	})
+  request.post(messenger_api_uri, {form: request_body}, (err, res, body) => {
+    
+    if (err) {
+      console.error(err);
+    }
+  })
 }
 
 function getUserInfo (ps_user_id, callback) {
-	let user_fields = 'first_name, last_name, timezone, is_payment_enabled';
-	let uri = `${graph_api_uri}/v2.6/${ps_user_id}?field=${user_fields}&access_token=${page_token}`;
-	
-	request.get(uri, (err, res, body) => {
-		callback(body);
-	});
+  let user_fields = 'first_name, last_name, timezone, is_payment_enabled';
+  let uri = `${graph_api_uri}/v2.6/${ps_user_id}?field=${user_fields}&access_token=${page_token}`;
+  
+  request.get(uri, (err, res, body) => {
+    callback(body);
+  });
 }
 
 function getPlaces (location, category, query, callback) {
 
-	let api_uri = `${place_api_uri}?type=place&q=mexican&categories=["FOOD_BEVERAGE"]`
+  let api_uri = `${place_api_uri}?type=place&q=mexican&categories=["FOOD_BEVERAGE"]`
 
 }
 
