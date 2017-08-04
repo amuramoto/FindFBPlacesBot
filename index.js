@@ -98,13 +98,14 @@ console.log(JSON.stringify(nlp));
         type: 'text',
         payload: {
           text: `Hi, ${user_info.first_name}! I'm the PlacesBot. I can 
-            find businesses near you. Wanna get started?`,
+          find businesses near you. Wanna get started?`,
           metadata: 'test'
         }
       }
       sendMessage(ps_user_id, 'text', message_payload);    
     })
-  } else if (nlp.intent[0].value == 'affirmative' 
+  } else if (nlp.intent 
+                && nlp.intent[0].value == 'affirmative' 
                 && nlp.intent[0].confidence > 0.75) {
 console.log('OK');    
     switch (userCache[ps_user_id]) {
