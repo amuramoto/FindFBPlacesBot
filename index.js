@@ -106,7 +106,8 @@ console.log('OK');
       }
       sendMessage(ps_user_id, 'text', message_payload);    
     })
-  } else if (nlp.entities.affirmative && nlp.entities.affirmative[0].confidence > 0.75) {
+  } else if (nlp.entities.intent[0].value == 'affirmative' 
+              && nlp.entities.intent[0].confidence > 0.75) {
     switch (userCache[ps_user_id]) {
       case 'greetings': 
         message_payload = {
