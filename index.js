@@ -93,7 +93,6 @@ console.log(JSON.stringify(nlp));
       
   if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
     getUserInfo(ps_user_id, user_info => {
-console.log(JSON.stringify(user_info));      
 console.log('OK');      
       logUserState(ps_user_id, 'greetings')
       message_payload = {
@@ -107,7 +106,7 @@ console.log('OK');
       sendMessage(ps_user_id, 'text', message_payload);    
     })
   } else if (nlp.entities.intent[0].value == 'affirmative' 
-              && nlp.entities.intent[0].confidence > 0.75) {
+                && nlp.entities.intent[0].confidence > 0.75) {
     switch (userCache[ps_user_id]) {
       case 'greetings': 
         message_payload = {
@@ -130,6 +129,7 @@ console.log('OK');
 
 function logUserState (ps_user_id, state) {
   userCache[ps_user_id] = {state: state};
+console.log(userCache[ps_user_id]);
 }
 
 function sendMessage (ps_user_id, type, message_payload) {
