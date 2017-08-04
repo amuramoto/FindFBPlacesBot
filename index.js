@@ -156,6 +156,9 @@ function handleMessage (messagingEvent) {
 
 
 function logUserState (ps_user_id, key, value) {
+  if (!userCache[ps_user_id]) {
+    userCache[ps_user_id] = {};
+  }
   userCache[ps_user_id][key] = value;
 }
 
