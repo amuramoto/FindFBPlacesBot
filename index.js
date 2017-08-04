@@ -1,16 +1,22 @@
 'use strict';
 
 const
+	request = require('request'),
+	express = require('express'),
+	cache = require('node-cache'),
+	crypto = require('crypto'),
+	bodyParser = require('body-parser'),
+	userCache = new cache(),
+	app = express();
+
+const
 	app_token = process.env.APP_TOKEN,
 	app_secret = process.env.APP_SECRET,
 	page_token = process.env.PAGE_TOKEN,
 	validation_token = process.env.VALIDATION_TOKEN,
-	page_id = process.env.PAGE_ID,
-	request = require('request'),
-	express = require('express'),
-	app = express(),
-	crypto = require('crypto'),
-	bodyParser = require('body-parser'),
+	page_id = process.env.PAGE_ID; 	
+
+const	
 	graph_api_uri = 'https://graph.facebook.com',	
 	messenger_api_uri = `${graph_api_uri}/v2.6/me/messages?access_token=${page_token}`,
 	place_api_uri = `${graph_api_uri}/v2.10/search?access_token=${app_token}`;
@@ -18,10 +24,9 @@ const
 app.use(bodyParser.urlencoded({ 
 	extended: false, 
 	verify: verifyRequestSignature 
-}))
-app.use(bodyParser.json())
+}));
+app.use(bodyParser.json());
 app.use(express.static(__dirname + '/www'));
-
 app.listen(process.env.PORT || 1337);
 
 app.get('/webhook', (req, res) => {
@@ -70,6 +75,7 @@ app.post('/webhook', (req, res) => {
 });
 
 function handleMessage (messagingEvent) {
+userCache.set(ps_user_id);	
 	let message_payload = {};
 	let user_info = {};
 	let ps_user_id = messagingEvent.sender.id;
@@ -90,13 +96,22 @@ console.log(JSON.stringify(nlp));
 			message_payload = {
 				type: 'text',
 				payload: {
-					text: `Hi, ${user_info.first_name}! What can I do for you?`,
+					text: `Hi, ${user_info.first_name}! I'm the PlacesBot. I can 
+						find businesses near you. Wanna get started?`,
 					metadata: 'test'
 				}
 			}
 		}
 		// sendMessage(ps_user_id, 'text', message_payload);	
 	});
+
+}
+
+function createUserCache(ps_user_id) {
+	userCache.set(ps_user_id);
+}
+
+function logUserState () {
 
 }
 
