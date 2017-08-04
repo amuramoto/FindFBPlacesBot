@@ -78,7 +78,7 @@ function handleMessage (messagingEvent) {
   let user_info = {};
   let ps_user_id = messagingEvent.sender.id;
   let message_text = messagingEvent.message.text;
-  let nlp = messagingEvent.message.nlp;
+  let nlp = messagingEvent.message.nlp.entities;
 
 console.log(JSON.stringify(nlp));
 
@@ -91,7 +91,7 @@ console.log(JSON.stringify(nlp));
   }, 1500);
 
       
-  if (nlp.entities.greetings && nlp.entities.greetings[0].confidence > 0.75) { 
+  if (nlp.greetings && nlp.greetings[0].confidence > 0.75) { 
     getUserInfo(ps_user_id, user_info => {
       logUserState(ps_user_id, 'greetings')
       message_payload = {
@@ -104,11 +104,12 @@ console.log(JSON.stringify(nlp));
       }
       sendMessage(ps_user_id, 'text', message_payload);    
     })
-  } else if (nlp.entities.intent[0].value == 'affirmative' 
-                && nlp.entities.intent[0].confidence > 0.75) {
+  } else if (nlp.intent[0].value == 'affirmative' 
+                && nlp.intent[0].confidence > 0.75) {
+console.log('OK');    
     switch (userCache[ps_user_id]) {
       case 'greetings': 
-console.log('OK');            
+        
         message_payload = {
           type: 'quick reply',
           payload: {
