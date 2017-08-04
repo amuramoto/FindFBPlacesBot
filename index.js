@@ -133,7 +133,6 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
   if (messagingEvent.message.attachments[0].type == 'location') {
     location = messagingEvent.message.attachments[0].payload.coordinates;
     message_payload = {
-      type: 'text',
       payload: {
         text: 'Ok, thanks! How far do you want me to search from where you are?',
         buttons:[
@@ -196,14 +195,15 @@ function sendMessage (ps_user_id, type, message_payload) {
     case 'button template':
       request_body.message = {
         attachment:{
-          type:"template",
+          type:'template',
           payload:{
-            template_type:"button",
+            template_type: 'button',
             text: message_payload.payload.text,
             buttons: message_payload.payload.buttons
           }
         }      
       }
+console.log(request_body.message);      
       break;
     default:
       request_body.message.attachment = {       
