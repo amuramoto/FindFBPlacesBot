@@ -52,8 +52,8 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
-        if (messagingEvent.message && !messagingEvent.message.isEcho) {          
-          handleMessage(messagingEvent);
+        if (messagingEvent.message.text && !messagingEvent.message.isEcho) {          
+          handleTextMessage(messagingEvent);
         } else if (messagingEvent.delivery) {
           // handleDeliveryConfirmation(messagingEvent);
         } else if (messagingEvent.postback) {
@@ -73,7 +73,7 @@ app.post('/webhook', (req, res) => {
   res.sendStatus(200);
 });
 
-function handleMessage (messagingEvent) { 
+function handleTextMessage (messagingEvent) { 
   let message_payload = {};
   let user_info = {};
   let ps_user_id = messagingEvent.sender.id;
@@ -223,7 +223,7 @@ function sendMessage (ps_user_id, type, message_payload) {
 }
 
 function handlePostback(messagingEvent) {
-
+  console.log(JSON.stringify(messagingEvent))
 }
 
 function postSenderAction (sender_action, ps_user_id, callback) {
