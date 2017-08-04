@@ -95,7 +95,7 @@ console.log(JSON.stringify(nlp));
 				}
 			}
 		}
-		sendMessage(ps_user_id, 'text', message_payload);	
+		// sendMessage(ps_user_id, 'text', message_payload);	
 	});
 
 }
