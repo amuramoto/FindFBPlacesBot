@@ -138,22 +138,22 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
         text: 'Ok, thanks! How far do you want me to search from where you are?',
         quick_replies:[
           {
-            content_type: 'postback',
+            content_type: 'text',
             title: '0.5 miles',
             payload: 0.5
           },
           {
-            content_type: 'postback',
+            content_type: 'text',
             title: '1 mile',
             payload: 1
           },
           {
-            content_type: 'postback',
+            content_type: 'text',
             title: '3 miles',
             payload: 3
           },
           {
-            content_type: 'postback',
+            content_type: 'text',
             title: '5 miles',
             payload: 5
           }
