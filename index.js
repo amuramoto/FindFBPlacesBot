@@ -81,6 +81,7 @@ function handleMessage (messagingEvent) {
 	let message_text = messagingEvent.message.text;
 	let nlp = messagingEvent.message.nlp;
 userCache.set(ps_user_id);
+console.log(userCache.get(ps_user_id))
 console.log(JSON.stringify(nlp));
 	setTimeout(() => {
 		postSenderAction('mark_seen', ps_user_id);	
