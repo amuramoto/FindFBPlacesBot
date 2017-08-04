@@ -52,7 +52,7 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
-
+console.log(JSON.stringify(messagingEvent));
         let ps_user_id = messagingEvent.sender.id;
 
         if (messagingEvent.message.text) {          
@@ -76,7 +76,7 @@ app.post('/webhook', (req, res) => {
   res.sendStatus(200);
 });
 
-function handleTextMessage (messagingEvent) { 
+function handleTextMessage (ps_user_id, messagingEvent) { 
   let message_payload = {};
   let user_info = {};
   let message_text = messagingEvent.message.text;
