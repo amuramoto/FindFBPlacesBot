@@ -108,7 +108,7 @@ console.log(JSON.stringify(nlp));
                 && nlp.intent[0].value == 'affirmative' 
                 && nlp.intent[0].confidence > 0.75) {
 console.log('OK');    
-    switch (userCache[ps_user_id]) {
+    switch (userCache[ps_user_id].state) {
       case 'greetings': 
         
         message_payload = {
