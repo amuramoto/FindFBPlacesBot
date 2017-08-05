@@ -17,7 +17,7 @@ const
 const 
   graph_api_uri = 'https://graph.facebook.com', 
   messenger_api_uri = `${graph_api_uri}/v2.6/me/messages?access_token=${page_token}`,
-  place_api_uri = `${graph_api_uri}/v2.10/search?access_token=${app_token}`,
+  place_api_uri = `${graph_api_uri}/v2.10/search?type=place&categories=["FOOD_BEVERAGE"]&access_token=${app_token}`,
   userCache = {};
 
 app.use(bodyParser.urlencoded({ 
@@ -299,8 +299,12 @@ function getUserInfo (ps_user_id, callback) {
 }
 
 function getPlaces (location, search_radius, query, callback) {
+  let qs = `&q=${query}&center=${location.lat},${location.long}&distance=${search_radius}`;
+  let request_uri = `${place_api_uri}${qs}`;
 
-  let api_uri = `${place_api_uri}?type=place&q=mexican&categories=["FOOD_BEVERAGE"]`
+  request.get(request_uri, (req, res, body) => {
+    callback(JSON.parse(body));
+  })
 
 }
 
