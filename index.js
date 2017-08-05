@@ -60,6 +60,7 @@ console.log(JSON.stringify(messagingEvent));
         } else if (messagingEvent.message.attachments) {          
           handleAttachmentMessage(ps_user_id, messagingEvent)
         } else if (messagingEvent.message.quick_reply) {
+console.log('QUICK REPLY')          
           handleQuickReply(ps_user_id, messagingEvent);
         } else if (messagingEvent.postback) {
           handlePostback(messagingEvent);
@@ -227,7 +228,6 @@ function sendMessage (ps_user_id, type, message_payload) {
         text: message_payload.payload.text,
         quick_replies: message_payload.payload.quick_replies
       }
-console.log(JSON.stringify(request_body))          
       break;
     case 'button template':
       request_body.message = {
