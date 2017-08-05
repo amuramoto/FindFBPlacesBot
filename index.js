@@ -52,7 +52,7 @@ app.post('/webhook', (req, res) => {
 
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
-console.log(JSON.stringify(messagingEvent.message));
+console.log(JSON.stringify(messagingEvent));
         let ps_user_id = messagingEvent.sender.id;
 
         if (messagingEvent.message.text) {          
