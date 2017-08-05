@@ -189,32 +189,7 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
             content_type: 'text',
             title: '0.5 miles',
             payload: {
-              location: location, 
               search_radius: 0.5
-            }
-          },
-          {
-            content_type: 'text',
-            title: '1 mile',
-            payload: {
-              location: location, 
-              search_radius: 1
-            }
-          },
-          {
-            content_type: 'text',
-            title: '3 miles',
-            payload: {
-              location: location, 
-              search_radius: 3
-            }
-          },
-          {
-            content_type: 'text',
-            title: '5 miles',
-            payload: {
-              location: location, 
-              search_radius: 5
             }
           }
         ]
