@@ -56,6 +56,7 @@ console.log(JSON.stringify(messagingEvent.message));
         let ps_user_id = messagingEvent.sender.id;
 
         if (messagingEvent.message.text) {          
+console.log(messagingEvent.message.text)
 console.log('TEXT')          
           handleTextMessage(ps_user_id, messagingEvent);
         } else if (messagingEvent.message.attachments) {          
