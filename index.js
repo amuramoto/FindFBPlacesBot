@@ -56,10 +56,12 @@ console.log(JSON.stringify(messagingEvent.message.quick_reply));
         let ps_user_id = messagingEvent.sender.id;
 
         if (messagingEvent.message.text) {          
+console.log('TEXT')          
           handleTextMessage(ps_user_id, messagingEvent);
         } else if (messagingEvent.message.attachments) {          
+console.log('ATTACHMENT')          
           handleAttachmentMessage(ps_user_id, messagingEvent)
-        } else if (messagingEvent.message["quick_reply"]) {
+        } else if (messagingEvent.message.quick_reply) {
 console.log('QUICK REPLY')          
           handleQuickReply(ps_user_id, messagingEvent);
         } else if (messagingEvent.postback) {
