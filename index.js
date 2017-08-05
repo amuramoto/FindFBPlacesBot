@@ -188,7 +188,7 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
           {
             content_type: 'text',
             title: '0.5 miles',
-            payload: ["ok"]
+            payload: 9
           }
         ]
       }
