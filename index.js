@@ -59,7 +59,7 @@ console.log(JSON.stringify(messagingEvent));
           handleTextMessage(ps_user_id, messagingEvent);
         } else if (messagingEvent.message.attachments) {          
           handleAttachmentMessage(ps_user_id, messagingEvent)
-        } else if (messagingEvent.message.quick_reply) {
+        } else if (messagingEvent.message["quick_reply"]) {
 console.log('QUICK REPLY')          
           handleQuickReply(ps_user_id, messagingEvent);
         } else if (messagingEvent.postback) {
