@@ -128,19 +128,19 @@ function handleTextMessage (ps_user_id, messagingEvent) {
       }
     } 
   } else if (nlp.local_search_query && nlp.local_search_query[0].confidence > 0.75) {
-    let location = userCache[ps_user_id]['location'];
-    let search_radius = messagingEvent.quick_reply.payload;
-    let query = nlp.local_search_query[0].value;
+    // let location = userCache[ps_user_id]['location'];
+    // let search_radius = messagingEvent.quick_reply.payload;
+    // let query = nlp.local_search_query[0].value;
     
-    message_payload = {
-      type: 'text',
-      payload: 'Ok, I\'m on it. Give me just a second.'
-    }
-    sendMessage(ps_user_id, 'text', message_payload);
+    // message_payload = {
+    //   type: 'text',
+    //   payload: 'Ok, I\'m on it. Give me just a second.'
+    // }
+    // sendMessage(ps_user_id, 'text', message_payload);
     
-    getPlaces(location, search_radius, query, (place_results) => {
-      console.log(JSON.stringify(place_results));
-    })
+    // getPlaces(location, search_radius, query, (place_results) => {
+    //   console.log(JSON.stringify(place_results));
+    // })
 
   } 
 }
