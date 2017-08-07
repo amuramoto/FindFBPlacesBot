@@ -26,6 +26,7 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 app.use(express.static(__dirname + '/www'));
+console.log(process.env.PORT);
 app.listen(process.env.PORT || 1337);
 
 app.get('/webhook', (req, res) => {
@@ -49,7 +50,7 @@ app.post('/webhook', (req, res) => {
     data.entry.forEach(pageEntry => {
       let pageID = pageEntry.id;
       let timeOfEvent = pageEntry.time;
-
+// res.sendStatus(200);
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
 console.log(JSON.stringify(messagingEvent));
@@ -93,9 +94,9 @@ function handleTextMessage (ps_user_id, messagingEvent) {
 
       
   if (nlp.greetings && nlp.greetings[0].confidence > 0.75) { 
-    getUserInfo(ps_user_id, user_info => {
+    getUserInfo(ps_user_id, user_info => {      
       logUserState(ps_user_id, 'state', 'greetings');
-      logUserState(ps_user_id, 'user_info', user_info);
+      logUserState(ps_user_id, 'user_info', user_info);  
       message_payload = {
         type: 'text',
         payload: {
@@ -127,51 +128,13 @@ function handleTextMessage (ps_user_id, messagingEvent) {
           break;
       }
     } 
-  } else if (nlp.local_search_query && nlp.local_search_query[0].confidence > 0.75) {
-    // let location = userCache[ps_user_id]['location'];
-    // let search_radius = messagingEvent.quick_reply.payload;
-    // let query = nlp.local_search_query[0].value;
-    
-    // message_payload = {
-    //   type: 'text',
-    //   payload: 'Ok, I\'m on it. Give me just a second.'
-    // }
-    // sendMessage(ps_user_id, 'text', message_payload);
-    
-    // getPlaces(location, search_radius, query, (place_results) => {
-    //   console.log(JSON.stringify(place_results));
-    // })
-
-  } 
-}
-
-function handleQuickReply (ps_user_id, messagingEvent) {
-  let message_payload;
-  let nlp = messagingEvent.message.nlp.entities;
-  if (nlp.distance && nlp.distance[0].confidence > 0.75) {     
-
-    message_payload = {
-      type: 'text',
-      payload: {
-        text: 'Alright, last thing. What kind of food are you looking for?',
-        metadata: messagingEvent.message.quick_reply.payload
-      }
-    }
-
-    sendMessage(ps_user_id, 'text', message_payload);    
-
-  }
-}
-
-function handleAttachmentMessage (ps_user_id, messagingEvent) {
-  let message_payload;
-  if (messagingEvent.message.attachments[0].type == 'location') {    
-    let location = messagingEvent.message.attachments[0].payload.coordinates;
-    logUserState(ps_user_id, 'location', location);
+  } else if (nlp.local_search_query && nlp.local_search_query[0].confidence > 0.75) {    
+    let query = nlp.local_search_query[0].value;
+    logUserState(ps_user_id, 'query', query);
     message_payload = {
       type: 'quick reply',
       payload: {
-        text: 'Ok, thanks! How far do you want me to search from where you are?',
+        text: 'Last thing, I promise. How far do you want me to search from where you are?',
         quick_replies:[
           {
             content_type: 'text',
@@ -198,6 +161,48 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
     }
 
     sendMessage(ps_user_id, 'quick reply', message_payload);
+    
+  } 
+}
+
+function handleQuickReply (ps_user_id, messagingEvent) {
+  let message_payload;
+  let location = userCache[ps_user_id]['location'];
+  let search_radius = messagingEvent.message.quick_reply.payload;
+  let query = userCache[ps_user_id]['query'];
+  let nlp = messagingEvent.message.nlp.entities;
+  if (nlp.distance && nlp.distance[0].confidence > 0.75) {     
+
+    message_payload = {
+      type: 'text',
+      payload: {
+        text: 'Ok, I\'m on it. Give me just a second.',
+        metadata: messagingEvent.message.quick_reply.payload
+      }
+    }
+
+    sendMessage(ps_user_id, 'text', message_payload);    
+    getPlaces(location, search_radius, query, (response) => {
+      console.log(response);
+      
+    })
+
+  }
+}
+
+function handleAttachmentMessage (ps_user_id, messagingEvent) {
+  let message_payload;
+  if (messagingEvent.message.attachments[0].type == 'location') {    
+    let location = messagingEvent.message.attachments[0].payload.coordinates;
+    logUserState(ps_user_id, 'location', location);
+    message_payload = {
+      type: 'text',
+      payload: {
+        text: 'Ok, I\'ve got your location. Thanks for that. \nWhat kind of food are you looking for?'
+      }
+    }
+
+    sendMessage(ps_user_id, 'text', message_payload);
   }
 }
 
@@ -205,10 +210,11 @@ function logUserState (ps_user_id, key, value) {
   if (!userCache[ps_user_id]) {
     userCache[ps_user_id] = {};
   }
-  userCache[ps_user_id][key] = value;
+  userCache[ps_user_id][key] = value;  
 }
 
 function sendMessage (ps_user_id, type, message_payload) {
+console.log(message_payload);     
   let request_body = {
     recipient: {
       id: ps_user_id
@@ -300,7 +306,8 @@ function getUserInfo (ps_user_id, callback) {
 }
 
 function getPlaces (location, search_radius, query, callback) {
-  let qs = `&q=${query}&center=${location.lat},${location.long}&distance=${search_radius}`;
+  let distance = search_radius * 1609;
+  let qs = `&q=${query}&center=${location.lat},${location.long}&distance=${distance}`;
   let request_uri = `${place_api_uri}${qs}`;
 
   request.get(request_uri, (req, res, body) => {
