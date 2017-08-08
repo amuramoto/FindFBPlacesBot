@@ -20,6 +20,7 @@ const
   place_api_uri = `${graph_api_uri}/v2.10/search?type=place&categories=["FOOD_BEVERAGE"]&access_token=${app_token}`,
   userCache = {};
 
+let message_payload = {};
 
 /*
  * SETUP
@@ -88,8 +89,7 @@ console.log(JSON.stringify(pageEntry, 2));
 /*
  * MESSAGE HANDLERS
  */ 
-function handleTextMessage (ps_user_id, messagingEvent) { 
-  let message_payload = {};
+function handleTextMessage (ps_user_id, messagingEvent) {   
   let user_info = {};
   let message_text = messagingEvent.message.text;
   let nlp = messagingEvent.message.nlp.entities;
@@ -103,14 +103,12 @@ function handleTextMessage (ps_user_id, messagingEvent) {
 
       
   if (nlp.greetings && nlp.greetings[0].confidence > 0.75) { 
-    getUserInfo(ps_user_id, user_info => {      
+      let user_name = userCache.user_info.first_name;
       logUserState(ps_user_id, 'state', 'greetings');
-      logUserState(ps_user_id, 'user_info', user_info);  
       message_payload = {
-        text: `Hi, ${user_info.first_name}! I'm the PlacesBot. I can find businesses near you. Wanna get started?`        
+        text: `Welcome back, ${user_name}! Ready to search for somewhere new?`        
       }
-      sendMessage(ps_user_id, 'text', message_payload);    
-    });
+      sendMessage(ps_user_id, 'text', message_payload);       
   } else if (nlp.intent) {
     let nlp_value = nlp.intent[0].value;
     let nlp_confidence = nlp.intent[0].confidence
@@ -165,7 +163,6 @@ function handleTextMessage (ps_user_id, messagingEvent) {
 }
 
 function handleQuickReply (ps_user_id, messagingEvent) {
-  let message_payload;
   let location = userCache[ps_user_id]['location'];
   let search_radius = messagingEvent.message.quick_reply.payload;
   let query = userCache[ps_user_id]['query'];
@@ -188,7 +185,7 @@ function handleQuickReply (ps_user_id, messagingEvent) {
 console.log(placesResponse);
       if (placesResponse.data.length == 0) {
         message_payload = {
-          text: 'Hmmmm, sorry, I didn\t find anything.'          
+          text: 'Hmmmm, sorry, I didn\'t find anything.'
         }
         sendMessage(ps_user_id, 'text', message_payload);
       } else {
@@ -233,7 +230,6 @@ console.log(placesResponse);
 }
 
 function handleAttachmentMessage (ps_user_id, messagingEvent) {
-  let message_payload;
   if (messagingEvent.message.attachments[0].type == 'location') {    
     let location = messagingEvent.message.attachments[0].payload.coordinates;
     logUserState(ps_user_id, 'location', location);
@@ -249,7 +245,14 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
 function handlePostback(ps_user_id, messagingEvent) {
   
   if (messagingEvent.postback.payload == 'new user') {
-    logUserState(ps_user_id);
+    getUserInfo(ps_user_id, user_info => {      
+      logUserState(ps_user_id, 'state', 'greetings');
+      logUserState(ps_user_id, 'user_info', user_info);  
+      message_payload = {
+        text: `Hi, ${user_info.first_name}! I'm the PlacesBot. I can find businesses near you. Wanna get started?`        
+      }
+      sendMessage(ps_user_id, 'text', message_payload);    
+    });
   } else {
     let pageId = messagingEvent.postback.payload;
     
@@ -264,7 +267,7 @@ function handlePostback(ps_user_id, messagingEvent) {
         subtitle += `\n${placeInfo.price_range}`; 
       }    
 
-      let message_payload = {
+      message_payload = {
         elements: [
           {
             "title": placeInfo.name,
