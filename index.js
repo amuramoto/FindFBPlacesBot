@@ -270,8 +270,8 @@ function handlePostback(ps_user_id, messagingEvent) {
       }
 
       if (placeInfo.hours) {
-        let today = getDayOfWeek();        
-        subtitle += '\nOpen Hours: ' + placeInfo.hours[today + '_1_open'] + ' - ' + placeInfo.hours[today + '_1_close'];
+        let hours = getFormattedHours(placeInfo.hours);        
+        subtitle += `\nOpen Hours: ${hours.open_time} - ${hours.close_time}`;
       }    
 
       message_payload = {
@@ -460,6 +460,27 @@ function verifyRequestSignature(req, res, buf) {
       throw new Error("Couldn't validate the request signature.");
     }
   }
+}
+
+function getFormattedHours(hours) {
+  let day_of_week = getDayOfWeek();
+  let open_time = hours[day_of_week + '_1_open'];
+  let close_time = hours[day_of_week + '_1_close'];
+  let open_time_parsed = open_time.split(':');
+  let close_time_parsed = close_time.split(':');
+  if (open_time_parsed[0] < 12) {    
+   open_time += 'am';
+  } else {
+    open_time_parsed[0] = open_time_parsed[0] - 12;
+    open_time = `${open_time_parsed[0]}:${open_time_parsed[1]}pm`
+  }
+  if (close_time_parsed[0] < 12) {    
+   close_time += 'am';
+  } else {
+    close_time_parsed[0] = close_time_parsed[0] - 12;
+    close_time = `${close_time_parsed[0]}:${close_time_parsed[1]}pm`
+  }
+  return {open_time: open_time, close_time: close_time};
 }
 
 function getDayOfWeek () {
