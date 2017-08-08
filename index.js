@@ -46,9 +46,9 @@ app.get('/webhook', (req, res) => {
   }  
 });
 
-app.post('/webhook', (req, res) => {
+app.post('/webhook', (req, res) => {  
   let data = req.body;
-console.log(data)
+
   // Make sure this is a page subscription
   if (data.object == 'page') {
     // Iterate over each entry
@@ -56,7 +56,6 @@ console.log(data)
     data.entry.forEach(pageEntry => {
       let pageID = pageEntry.id;
       let timeOfEvent = pageEntry.time;
-// res.sendStatus(200);
 console.log(JSON.stringify(pageEntry, 2));
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
@@ -103,8 +102,10 @@ function handleTextMessage (ps_user_id, messagingEvent) {
 
       
   if (nlp.greetings && nlp.greetings[0].confidence > 0.75) { 
-      let user_name = userCache.user_info.first_name;
+      
+      let user_name = userCache[ps_user_id]['user_info']['first_name'];      
       logUserState(ps_user_id, 'state', 'greetings');
+      
       message_payload = {
         text: `Welcome back, ${user_name}! Ready to search for somewhere new?`        
       }
@@ -245,14 +246,15 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
 function handlePostback(ps_user_id, messagingEvent) {
   
   if (messagingEvent.postback.payload == 'new user') {
-    getUserInfo(ps_user_id, user_info => {      
+    getUserInfo(ps_user_id, user_info => {
+      let user_name = user_info.first_name;
       logUserState(ps_user_id, 'state', 'greetings');
-      logUserState(ps_user_id, 'user_info', user_info);  
+      logUserState(ps_user_id, 'user_info', user_info);
       message_payload = {
-        text: `Hi, ${user_info.first_name}! I'm the PlacesBot. I can find businesses near you. Wanna get started?`        
+        text: `Hi, ${user_name}! I'm the PlacesBot. I can find businesses near you. Wanna get started?`        
       }
-      sendMessage(ps_user_id, 'text', message_payload);    
-    });
+      sendMessage(ps_user_id, 'text', message_payload);        
+    })    
   } else {
     let pageId = messagingEvent.postback.payload;
     
@@ -265,6 +267,11 @@ function handlePostback(ps_user_id, messagingEvent) {
       
       if (placeInfo.price_range) {
         subtitle += `\n${placeInfo.price_range}`; 
+      }
+
+      if (placeInfo.hours) {
+        let today = getDayOfWeek();        
+        subtitle += '\nOpen Hours: ' + placeInfo.hours[today + '_1_open'] + ' - ' + placeInfo.hours[today + '_1_close'];
       }    
 
       message_payload = {
@@ -335,7 +342,7 @@ function getPlaces (location, search_radius, query, callback) {
 }
 
 function getPlaceInfo (placeId, callback) {
-  let fields = 'name, phone, location, cover, overall_star_rating, rating_count, price_range, website';  
+  let fields = 'name, phone, location, cover, overall_star_rating, rating_count, price_range, hours, website';  
   let qs = `fields=${fields}&access_token=${app_token}`;
   let request_uri = `${graph_api_uri}/v2.10/${placeId}?${qs}`;
 
