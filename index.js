@@ -21,7 +21,9 @@ const
   userCache = {};
 
 
-// SETUP
+/*
+ * SETUP
+ */ 
 
 app.use(bodyParser.urlencoded({ 
   extended: false, 
@@ -83,7 +85,9 @@ console.log(JSON.stringify(pageEntry, 2));
   res.sendStatus(200);
 });
 
-// MESSAGE HANDLERS
+/*
+ * MESSAGE HANDLERS
+ */ 
 function handleTextMessage (ps_user_id, messagingEvent) { 
   let message_payload = {};
   let user_info = {};
@@ -243,48 +247,53 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
 
 
 function handlePostback(ps_user_id, messagingEvent) {
-  let pageId = messagingEvent.postback.payload;
   
-  getPlaceInfo(pageId, (placeInfo) => {
-    let subtitle = `${placeInfo.location.street}`
-
-    if (placeInfo.overall_star_rating) {
-      subtitle += `\nRated ${placeInfo.overall_star_rating}`;
-    }
+  if (messagingEvent.postback.payload == 'new user') {
+    logUserState(ps_user_id);
+  } else {
+    let pageId = messagingEvent.postback.payload;
     
-    if (placeInfo.price_range) {
-      subtitle += `\n${placeInfo.price_range}`; 
-    }    
+    getPlaceInfo(pageId, (placeInfo) => {
+      let subtitle = `${placeInfo.location.street}`
 
-    let message_payload = {
-      elements: [
-        {
-          "title": placeInfo.name,
-          "image_url": placeInfo.cover.source,
-          "subtitle": subtitle,
-          "buttons":[
-            {
-              "type":"phone_number",
-              "title":"Call",
-              "payload": placeInfo.phone.replace(/\D/g, '')
-            },
-            {
-              "type":"web_url",
-              "title":"View Website",
-              "url": placeInfo.website
-            }              
-          ]      
-        }
-      ]
-    }
+      if (placeInfo.overall_star_rating) {
+        subtitle += `\nRated ${placeInfo.overall_star_rating}`;
+      }
+      
+      if (placeInfo.price_range) {
+        subtitle += `\n${placeInfo.price_range}`; 
+      }    
 
-    sendMessage(ps_user_id, 'generic template', message_payload);
-  })
+      let message_payload = {
+        elements: [
+          {
+            "title": placeInfo.name,
+            "image_url": placeInfo.cover.source,
+            "subtitle": subtitle,
+            "buttons":[
+              {
+                "type":"phone_number",
+                "title":"Call",
+                "payload": placeInfo.phone.replace(/\D/g, '')
+              },
+              {
+                "type":"web_url",
+                "title":"View Website",
+                "url": placeInfo.website
+              }              
+            ]      
+          }
+        ]
+      }
+
+      sendMessage(ps_user_id, 'generic template', message_payload);
+    })
+  }
 }
 
-
-// API CALLS
-
+/*
+ * API CALLS
+ */ 
 function postSenderAction (sender_action, ps_user_id, callback) {
   let timeout = 0;
   let request_body = {
@@ -333,8 +342,10 @@ function getPlaceInfo (placeId, callback) {
 
 }
 
-// UTILITY FUNCTIONS
 
+/*
+ * UTILITY FUNCTIONS
+ */ 
 function sendMessage (ps_user_id, type, message_payload) {
 console.log(message_payload);     
   let request_body = {
@@ -470,8 +481,11 @@ function getDayOfWeek () {
 }
 
 function logUserState (ps_user_id, key, value) {
-  if (!userCache[ps_user_id]) {
+  if (ps_user_id && !userCache[ps_user_id]) {
     userCache[ps_user_id] = {};
   }
-  userCache[ps_user_id][key] = value;  
+
+  if (key && value) {
+    userCache[ps_user_id][key] = value;
+  }  
 }
