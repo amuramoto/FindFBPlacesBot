@@ -31,8 +31,7 @@ app.use(bodyParser.urlencoded({
   verify: verifyRequestSignature 
 }));
 app.use(bodyParser.json());
-app.use(express.static(__dirname + '/www'));
-console.log(process.env.PORT);
+
 app.listen(process.env.PORT || 1337);
 
 app.get('/webhook', (req, res) => {
@@ -93,34 +92,81 @@ function handleTextMessage (ps_user_id, messagingEvent) {
   let message_text = messagingEvent.message.text;
   let nlp = messagingEvent.message.nlp.entities;
 
-  setTimeout(() => {
-    postSenderAction('mark_seen', ps_user_id);    
-    setTimeout(() => {
-      postSenderAction('typing_on', ps_user_id)
-    }, 2000);
-  }, 1500);
+  // setTimeout(() => {
+  //   postSenderAction('mark_seen', ps_user_id);    
+  //   setTimeout(() => {
+  //     postSenderAction('typing_on', ps_user_id)
+  //   }, 2000);
+  // }, 1500);
 
-      
+  // if(message_text == 'test') {
+  //   message_payload = {
+  //        "template_type": "media",
+  //        "elements": [
+  //           {
+  //             "media_type": "image",
+  //             "media_url": "https://messenger.fb.com/wp-content/uploads/2013/03/messenger.png",
+  //             "buttons": [
+  //               {
+  //                 "type": "web_url",
+  //                 "url": "https://tbd-agent.herokuapp.com/webview.html?env=nakuma.sb",
+  //                 "title": "View Website",
+  //                 "messenger_extensions": true
+  //               }
+  //             ]
+  //           }
+  //        ]
+  //     }
+    
+  //   sendMessage(ps_user_id, 'generic template', message_payload);
+
+  // } else 
+
   if (nlp.greetings && nlp.greetings[0].confidence > 0.75) { 
       
       let user_name = userCache[ps_user_id]['user_info']['first_name'];      
-      logUserState(ps_user_id, 'state', 'greetings');
+      logUserState(ps_user_id, 'state', 'return');
       
       message_payload = {
         text: `Welcome back, ${user_name}! Ready to search for somewhere new?`        
       }
       sendMessage(ps_user_id, 'text', message_payload);       
   } else if (nlp.intent) {
+   
     let nlp_value = nlp.intent[0].value;
     let nlp_confidence = nlp.intent[0].confidence
     
     if (nlp_value == 'affirmative' && nlp_confidence > 0.75) {
       //check what they user is affirming
       switch (userCache[ps_user_id].state) {
-        case 'greetings': 
-          
+        case 'new': 
+          logUserState(ps_user_id, 'state', 'location');    
           message_payload = {            
             text: `Sweeeeet. Let's start by getting your location.`,
+            quick_replies: [
+              { "content_type":"location" }
+            ]                      
+          }
+          sendMessage(ps_user_id, 'quick reply', message_payload);
+          break;
+        case 'return': 
+          let last_location_title = userCache[ps_user_id]['last_location']['title'];
+          logUserState(ps_user_id, 'state', 'location');    
+
+          message_payload = {            
+            text: `Sounds good! Do you still want to search around ${last_location_title}`            
+          }
+          sendMessage(ps_user_id, 'text', message_payload);
+          break;
+        case 'location':                    
+          handleAttachmentMessage(ps_user_id);
+          break;
+      }
+    } else if (nlp_value == 'negative' && nlp_confidence > 0.75) {
+      switch (userCache[ps_user_id].state) {
+        case 'location': 
+          message_payload = {            
+            text: `Ok, let's get an updated location for you then!`,
             quick_replies: [
               { "content_type":"location" }
             ]                      
@@ -131,20 +177,11 @@ function handleTextMessage (ps_user_id, messagingEvent) {
     } 
   } else if (nlp.local_search_query && nlp.local_search_query[0].confidence > 0.75) {    
     let query = nlp.local_search_query[0].value;
-    logUserState(ps_user_id, 'query', query);
+    logUserState(ps_user_id, 'last_search', query);
+    logUserState(ps_user_id, 'state', 'distance');
     message_payload = {
       text: 'Last thing, I promise. How far do you want me to search from where you are?',
       quick_replies:[
-        {
-          content_type: 'text',
-          title: '0.5 miles',
-          payload: 804            
-        },
-        {
-          content_type: 'text',
-          title: '1 mile',
-          payload: 1609            
-        },
         {
           content_type: 'text',
           title: '3 miles',
@@ -154,6 +191,16 @@ function handleTextMessage (ps_user_id, messagingEvent) {
           content_type: 'text',
           title: '5 miles',
           payload: 8045             
+        },
+        {
+          content_type: 'text',
+          title: '10 miles',
+          payload: 16090             
+        },
+        {
+          content_type: 'text',
+          title: '20 miles',
+          payload: 32180         
         }
       ]
     }    
@@ -163,31 +210,28 @@ function handleTextMessage (ps_user_id, messagingEvent) {
   } 
 }
 
-function handleQuickReply (ps_user_id, messagingEvent) {
-  let location = userCache[ps_user_id]['location'];
-  let search_radius = messagingEvent.message.quick_reply.payload;
-  let query = userCache[ps_user_id]['query'];
+function handleQuickReply (ps_user_id, messagingEvent) {  
   let nlp = messagingEvent.message.nlp.entities;
-  let today = getDayOfWeek();
-
+  
   if (nlp.distance && nlp.distance[0].confidence > 0.75) {     
-
+    let location = userCache[ps_user_id]['last_location'];
+    let query = userCache[ps_user_id]['last_search'];
+    let distance = messagingEvent.message.quick_reply.payload;
+    
+    logUserState(ps_user_id, 'last_distance', distance);
+    logUserState(ps_user_id, 'state', 'search');
+    
     message_payload = {
-      type: 'text',
-      payload: {
-        text: 'Ok, I\'m on it. Give me just a second.',
-        metadata: messagingEvent.message.quick_reply.payload
-      }
-    }
+      text: 'Ok, I\'m on it. Give me just a second.'
+    };
 
     sendMessage(ps_user_id, 'text', message_payload);    
 
-    getPlaces(location, search_radius, query, (placesResponse) => {
-console.log(placesResponse);
-      if (placesResponse.data.length == 0) {
+    getPlaces(location, distance, query, (placesResponse) => {
+      if (placesResponse.data.length < 1) {
         message_payload = {
           text: 'Hmmmm, sorry, I didn\'t find anything.'
-        }
+        };
         sendMessage(ps_user_id, 'text', message_payload);
       } else {
         message_payload = {
@@ -197,23 +241,20 @@ console.log(placesResponse);
 
         message_payload = {
           elements: []
-        }
+        };
 
         for (let place of placesResponse.data) {
-
-          if (place.cover) {
+          if (place.cover && place.photos && place.photos.data.length > 2) {
             let place_details = {
               "title": place.name,
               "image_url": place.cover.source,
               "subtitle": `${place.location.street}`,
-              "buttons": [
-                  {
-                      "title": "More Info",
-                      "type": "postback",
-                      "payload": place.id
-                  }
-              ]
-            }
+              "buttons": [{
+                  "title": "More Info",
+                  "type": "postback",
+                  "payload": place.id
+              }]
+            };
             
             message_payload.elements.push(place_details);
           }
@@ -223,7 +264,7 @@ console.log(placesResponse);
           } 
         }
 
-        sendMessage(ps_user_id, 'list template', message_payload)
+        sendMessage(ps_user_id, 'list template', message_payload);
       }
     })
 
@@ -231,15 +272,25 @@ console.log(placesResponse);
 }
 
 function handleAttachmentMessage (ps_user_id, messagingEvent) {
-  if (messagingEvent.message.attachments[0].type == 'location') {    
-    let location = messagingEvent.message.attachments[0].payload.coordinates;
-    logUserState(ps_user_id, 'location', location);
+  if (!messagingEvent) {
+    message_payload = {
+      text: 'Ok, cool. What kind of food do you want this time around?'
+    }
+  } else if (messagingEvent.message.attachments[0].type == 'location') {    
+    let location = {
+      coords: messagingEvent.message.attachments[0].payload.coordinates,
+      title: messagingEvent.message.attachments[0].title
+    };
+
+    logUserState(ps_user_id, 'last_location', location);
+    
     message_payload = {
       text: 'Ok, I\'ve got your location. Thanks for that. \nWhat kind of food are you looking for?'
-    }
-
-    sendMessage(ps_user_id, 'text', message_payload);
+    }  
   }
+
+
+  sendMessage(ps_user_id, 'text', message_payload);
 }
 
 
@@ -248,7 +299,7 @@ function handlePostback(ps_user_id, messagingEvent) {
   if (messagingEvent.postback.payload == 'new user') {
     getUserInfo(ps_user_id, user_info => {
       let user_name = user_info.first_name;
-      logUserState(ps_user_id, 'state', 'greetings');
+      logUserState(ps_user_id, 'state', 'new');
       logUserState(ps_user_id, 'user_info', user_info);
       message_payload = {
         text: `Hi, ${user_name}! I'm the PlacesBot. I can find businesses near you. Wanna get started?`        
@@ -256,10 +307,11 @@ function handlePostback(ps_user_id, messagingEvent) {
       sendMessage(ps_user_id, 'text', message_payload);        
     })    
   } else {
-    let pageId = messagingEvent.postback.payload;
-    
+    let pageId = messagingEvent.postback.payload;    
     getPlaceInfo(pageId, (placeInfo) => {
       let subtitle = `${placeInfo.location.street}`
+
+      logUserState(ps_user_id, 'state', 'done');
 
       if (placeInfo.overall_star_rating) {
         subtitle += `\nRated ${placeInfo.overall_star_rating}`;
@@ -273,6 +325,10 @@ function handlePostback(ps_user_id, messagingEvent) {
         let hours = getFormattedHours(placeInfo.hours);        
         subtitle += `\nOpen Hours: ${hours.open_time} - ${hours.close_time}`;
       }    
+
+      if (placeInfo.photos) {            
+        logUserState(ps_user_id, 'photos', placeInfo.photos.data);
+      }
 
       message_payload = {
         elements: [
@@ -290,6 +346,12 @@ function handlePostback(ps_user_id, messagingEvent) {
                 "type":"web_url",
                 "title":"View Website",
                 "url": placeInfo.website
+              },
+              {
+                "type":"web_url",
+                "title":"See Photos",
+                "url": "https://porcupo.net/alex",
+                "messenger_extensions": true
               }              
             ]      
           }
@@ -331,8 +393,8 @@ function getUserInfo (ps_user_id, callback) {
 }
 
 function getPlaces (location, search_radius, query, callback) {
-  let fields = 'name, phone, location, cover, link, website';
-  let qs = `&fields=${fields}&q=${query}&center=${location.lat},${location.long}&distance=${search_radius}`;
+  let fields = 'name, phone, location, cover, link, website, photos';
+  let qs = `&fields=${fields}&q=${query}&center=${location.coords.lat},${location.coords.long}&distance=${search_radius}`;
   let request_uri = `${place_api_uri}${qs}`;
 
   request.get(request_uri, (req, res, body) => {
@@ -342,7 +404,7 @@ function getPlaces (location, search_radius, query, callback) {
 }
 
 function getPlaceInfo (placeId, callback) {
-  let fields = 'name, phone, location, cover, overall_star_rating, rating_count, price_range, hours, website';  
+  let fields = 'name, phone, location, cover, overall_star_rating, rating_count, price_range, hours, website, photos';  
   let qs = `fields=${fields}&access_token=${app_token}`;
   let request_uri = `${graph_api_uri}/v2.10/${placeId}?${qs}`;
 
@@ -520,3 +582,77 @@ function logUserState (ps_user_id, key, value) {
     userCache[ps_user_id][key] = value;
   }  
 }
+
+function decryptExtensionsRequest (hash) {
+  let request = hash.split('.');
+  let signature = request[0].replace('-','+').replace('_', '/');  
+  signature = Buffer.from(signature, 'base64').toString('hex');
+  let payload = Buffer.from(request[1], 'base64').toString('ascii')
+
+  let expected_signature = crypto.createHmac('sha256', app_secret)
+                            .update(request[1])
+                            .digest('hex');
+  // Confirm the signature
+  if (signature !== expected_signature) {
+    error_log('Bad Signed JSON signature!');
+    return null;
+  }
+
+  return payload;
+}
+
+app.get('/pictures', (req, res) => {
+  let hash = req.query.hash;
+  let body = JSON.parse(decryptExtensionsRequest(hash));
+  
+  if (body) {
+    let photoUrlArr = [];
+    let photosArr = userCache[body.psid]['photos'];  
+    let batchRequest = [];
+    photosArr.forEach(photo => {
+console.log('GET PHOTO');      
+      batchRequest.push({"method":"GET", "relative_url":`v2.10/${photo.id}?fields=images`});
+    })
+
+    let request_body = {
+      batch: JSON.stringify(batchRequest),
+      include_headers: false
+    } 
+    request.post(`${graph_api_uri}?access_token=${app_token}`, {form: request_body}, (photoreq, photores, body) => {
+      
+      body = JSON.parse(body);
+      
+      body.forEach(photo => {
+        let images = JSON.parse(photo.body).images;
+        for (let i in images) {
+          if (images[i].height <= 200) {
+            photoUrlArr.push(images[i].source);
+            break;
+          }
+            
+        }
+      })
+      
+      res.json({"photos": photoUrlArr});
+    })  
+      
+  } else {
+    res.sendStatus(400);
+  }
+  
+})
+
+
+app.use('/', 
+  (req, res, next) => {    
+    let referer = req.get('Referer');
+    if (referer.indexOf('www.messenger.com') >= 0) {
+      res.setHeader('X-Frame-Options', 'ALLOW-FROM https://www.messenger.com/');
+    } else if (referer.indexOf('www.facebook.com') >= 0) {
+      res.setHeader('X-Frame-Options', 'ALLOW-FROM https://www.facebook.com/');
+    }
+    next();
+  }, 
+  express.static(__dirname + '/www')
+);
+
