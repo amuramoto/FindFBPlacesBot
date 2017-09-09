@@ -46,8 +46,9 @@ app.get('/webhook', (req, res) => {
 });
 
 app.post('/webhook', (req, res) => {  
+res.sendStatus(200);
   let data = req.body;
-
+  console.log(JSON.stringify(req.body, 2));
   // Make sure this is a page subscription
   if (data.object == 'page') {
     // Iterate over each entry
@@ -55,7 +56,6 @@ app.post('/webhook', (req, res) => {
     data.entry.forEach(pageEntry => {
       let pageID = pageEntry.id;
       let timeOfEvent = pageEntry.time;
-console.log(JSON.stringify(pageEntry, 2));
       // Iterate over each messaging event
       pageEntry.messaging.forEach(messagingEvent => {
 
@@ -81,7 +81,7 @@ console.log(JSON.stringify(pageEntry, 2));
   //
   // You must send back a 200, within 20 seconds, to let us know you've 
   // successfully received the callback. Otherwise, the request will time out.
-  res.sendStatus(200);
+  // res.sendStatus(200);
 });
 
 /*
@@ -99,115 +99,105 @@ function handleTextMessage (ps_user_id, messagingEvent) {
   //   }, 2000);
   // }, 1500);
 
-  // if(message_text == 'test') {
-  //   message_payload = {
-  //        "template_type": "media",
-  //        "elements": [
-  //           {
-  //             "media_type": "image",
-  //             "media_url": "https://messenger.fb.com/wp-content/uploads/2013/03/messenger.png",
-  //             "buttons": [
-  //               {
-  //                 "type": "web_url",
-  //                 "url": "https://tbd-agent.herokuapp.com/webview.html?env=nakuma.sb",
-  //                 "title": "View Website",
-  //                 "messenger_extensions": true
-  //               }
-  //             ]
-  //           }
-  //        ]
-  //     }
-    
-  //   sendMessage(ps_user_id, 'generic template', message_payload);
-
-  // } else 
-
-  if (nlp.greetings && nlp.greetings[0].confidence > 0.75) { 
-      
-      let user_name = userCache[ps_user_id]['user_info']['first_name'];      
-      logUserState(ps_user_id, 'state', 'return');
-      
-      message_payload = {
-        text: `Welcome back, ${user_name}! Ready to search for somewhere new?`        
-      }
-      sendMessage(ps_user_id, 'text', message_payload);       
-  } else if (nlp.intent) {
-   
+  if (nlp.greetings && nlp.greetings[0].confidence > 0.75) {       
+    startReturnUserFlow(ps_user_id);       
+  } else if (nlp.intent) {   
     let nlp_value = nlp.intent[0].value;
     let nlp_confidence = nlp.intent[0].confidence
     
     if (nlp_value == 'affirmative' && nlp_confidence > 0.75) {
-      //check what they user is affirming
-      switch (userCache[ps_user_id].state) {
-        case 'new': 
-          logUserState(ps_user_id, 'state', 'location');    
-          message_payload = {            
-            text: `Sweeeeet. Let's start by getting your location.`,
-            quick_replies: [
-              { "content_type":"location" }
-            ]                      
-          }
-          sendMessage(ps_user_id, 'quick reply', message_payload);
-          break;
-        case 'return': 
-          let last_location_title = userCache[ps_user_id]['last_location']['title'];
-          logUserState(ps_user_id, 'state', 'location');    
-
-          message_payload = {            
-            text: `Sounds good! Do you still want to search around ${last_location_title}`            
-          }
-          sendMessage(ps_user_id, 'text', message_payload);
-          break;
-        case 'location':                    
-          handleAttachmentMessage(ps_user_id);
-          break;
-      }
+      handleAffirmativeResponse(ps_user_id);
     } else if (nlp_value == 'negative' && nlp_confidence > 0.75) {
-      switch (userCache[ps_user_id].state) {
-        case 'location': 
-          message_payload = {            
-            text: `Ok, let's get an updated location for you then!`,
-            quick_replies: [
-              { "content_type":"location" }
-            ]                      
-          }
-          sendMessage(ps_user_id, 'quick reply', message_payload);
-          break;
-      }
+      handleNegativeResponse(ps_user_id);
     } 
   } else if (nlp.local_search_query && nlp.local_search_query[0].confidence > 0.75) {    
     let query = nlp.local_search_query[0].value;
     logUserState(ps_user_id, 'last_search', query);
-    logUserState(ps_user_id, 'state', 'distance');
-    message_payload = {
-      text: 'Last thing, I promise. How far do you want me to search from where you are?',
-      quick_replies:[
-        {
-          content_type: 'text',
-          title: '3 miles',
-          payload: 4827            
-        },
-        {
-          content_type: 'text',
-          title: '5 miles',
-          payload: 8045             
-        },
-        {
-          content_type: 'text',
-          title: '10 miles',
-          payload: 16090             
-        },
-        {
-          content_type: 'text',
-          title: '20 miles',
-          payload: 32180         
-        }
-      ]
-    }    
-
-    sendMessage(ps_user_id, 'quick reply', message_payload);
-    
+    requestSearchRadius(ps_user_id);
   } 
+}
+
+function startReturnUserFlow() {
+  let user_name = userCache[ps_user_id]['user_info']['first_name'];      
+  logUserState(ps_user_id, 'state', 'return');
+  
+  message_payload = {
+    text: `Welcome back, ${user_name}! Ready to search for somewhere new?`        
+  }
+  sendMessage(ps_user_id, 'text', message_payload);
+}
+
+function handleAffirmativeResponse(ps_user_id) {
+  //check what they user is affirming
+  switch (userCache[ps_user_id].state) {
+    case 'new': 
+      logUserState(ps_user_id, 'state', 'location');    
+      message_payload = {            
+        text: `Sweeeeet. Let's start by getting your location.`,
+        quick_replies: [
+          { "content_type":"location" }
+        ]                      
+      }
+      sendMessage(ps_user_id, 'quick reply', message_payload);
+      break;
+    case 'return': 
+      let last_location_title = userCache[ps_user_id]['last_location']['title'];
+      logUserState(ps_user_id, 'state', 'location');    
+
+      message_payload = {            
+        text: `Sounds good! Do you still want to search around ${last_location_title}`            
+      }
+      sendMessage(ps_user_id, 'text', message_payload);
+      break;
+    case 'location':                    
+      handleAttachmentMessage(ps_user_id);
+      break;
+  }
+}
+
+function handleNegativeResponse(ps_user_id) {
+  switch (userCache[ps_user_id].state) {
+    case 'location': 
+      message_payload = {            
+        text: `Ok, let's get an updated location for you then!`,
+        quick_replies: [
+          { "content_type":"location" }
+        ]                      
+      }
+      sendMessage(ps_user_id, 'quick reply', message_payload);
+      break;
+  }
+}
+
+function requestSearchRadius(ps_user_id) {  
+  logUserState(ps_user_id, 'state', 'distance');
+  message_payload = {
+    text: 'Last thing, I promise. How far do you want me to search from where you are?',
+    quick_replies:[
+      {
+        content_type: 'text',
+        title: '3 miles',
+        payload: 4827            
+      },
+      {
+        content_type: 'text',
+        title: '5 miles',
+        payload: 8045             
+      },
+      {
+        content_type: 'text',
+        title: '10 miles',
+        payload: 16090             
+      },
+      {
+        content_type: 'text',
+        title: '20 miles',
+        payload: 32180         
+      }
+    ]
+  }    
+
+  sendMessage(ps_user_id, 'quick reply', message_payload);
 }
 
 function handleQuickReply (ps_user_id, messagingEvent) {  
@@ -227,47 +217,51 @@ function handleQuickReply (ps_user_id, messagingEvent) {
 
     sendMessage(ps_user_id, 'text', message_payload);    
 
-    getPlaces(location, distance, query, (placesResponse) => {
-      if (placesResponse.data.length < 1) {
-        message_payload = {
-          text: 'Hmmmm, sorry, I didn\'t find anything.'
-        };
-        sendMessage(ps_user_id, 'text', message_payload);
-      } else {
-        message_payload = {
-          text: 'Ok, here are some options.'          
-        }
-        sendMessage(ps_user_id, 'text', message_payload);
-
-        message_payload = {
-          elements: []
-        };
-
-        for (let place of placesResponse.data) {
-          if (place.cover && place.photos && place.photos.data.length > 2) {
-            let place_details = {
-              "title": place.name,
-              "image_url": place.cover.source,
-              "subtitle": `${place.location.street}`,
-              "buttons": [{
-                  "title": "More Info",
-                  "type": "postback",
-                  "payload": place.id
-              }]
-            };
-            
-            message_payload.elements.push(place_details);
-          }
-
-          if (message_payload.elements.length == 4) {
-            break;
-          } 
-        }
-
-        sendMessage(ps_user_id, 'list template', message_payload);
-      }
+    getPlaces(location, distance, query, placesResponse => {
+      sendPlacesList(ps_user_id, placesResponse);
     })
 
+  }
+}
+
+function sendPlacesList(ps_user_id, placesResponse) {
+  if (placesResponse.data.length < 1) {
+    message_payload = {
+      text: 'Hmmmm, sorry, I didn\'t find anything.'
+    };
+    sendMessage(ps_user_id, 'text', message_payload);
+  } else {
+    message_payload = {
+      text: 'Ok, here are some options.'          
+    }
+    sendMessage(ps_user_id, 'text', message_payload);
+
+    message_payload = {
+      elements: []
+    };
+
+    for (let place of placesResponse.data) {
+      if (place.cover && place.photos && place.photos.data.length > 2) {
+        let place_details = {
+          "title": place.name,
+          "image_url": place.cover.source,
+          "subtitle": `${place.location.street}`,
+          "buttons": [{
+              "title": "More Info",
+              "type": "postback",
+              "payload": place.id
+          }]
+        };
+        
+        message_payload.elements.push(place_details);
+      }
+
+      if (message_payload.elements.length == 4) {
+        break;
+      } 
+    }
+
+    sendMessage(ps_user_id, 'list template', message_payload);
   }
 }
 
@@ -294,72 +288,67 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
 }
 
 
+function sendPlaceInfo(ps_user_id) {
+  let subtitle = `${placeInfo.location.street}`
+
+  logUserState(ps_user_id, 'state', 'done');
+
+  if (placeInfo.overall_star_rating) {
+    subtitle += `\nRated ${placeInfo.overall_star_rating}`;
+  }
+  
+  if (placeInfo.price_range) {
+    subtitle += `\n${placeInfo.price_range}`; 
+  }
+
+  if (placeInfo.hours) {
+    let hours = formatHours(placeInfo.hours);        
+    subtitle += `\nOpen Hours: ${hours.open_time} - ${hours.close_time}`;
+  }    
+
+  if (placeInfo.photos) {            
+    logUserState(ps_user_id, 'photos', placeInfo.photos.data);
+  }
+
+  message_payload = {
+    elements: [
+      {
+        "title": placeInfo.name,
+        "image_url": placeInfo.cover.source,
+        "subtitle": subtitle,
+        "buttons":[
+          {
+            "type":"phone_number",
+            "title":"Call",
+            "payload": placeInfo.phone.replace(/\D/g, '')
+          },
+          {
+            "type":"web_url",
+            "title":"View Website",
+            "url": placeInfo.website
+          },
+          {
+            "type":"web_url",
+            "title":"See Photos",
+            "url": "https://porcupo.net/alex",
+            "messenger_extensions": true
+          }              
+        ]      
+      }
+    ]
+  }
+
+  sendMessage(ps_user_id, 'generic template', message_payload);
+
+}
+
 function handlePostback(ps_user_id, messagingEvent) {
   
   if (messagingEvent.postback.payload == 'new user') {
-    getUserInfo(ps_user_id, user_info => {
-      let user_name = user_info.first_name;
-      logUserState(ps_user_id, 'state', 'new');
-      logUserState(ps_user_id, 'user_info', user_info);
-      message_payload = {
-        text: `Hi, ${user_name}! I'm the PlacesBot. I can find businesses near you. Wanna get started?`        
-      }
-      sendMessage(ps_user_id, 'text', message_payload);        
-    })    
+    handleNewUser(ps_user_id);    
   } else {
     let pageId = messagingEvent.postback.payload;    
-    getPlaceInfo(pageId, (placeInfo) => {
-      let subtitle = `${placeInfo.location.street}`
-
-      logUserState(ps_user_id, 'state', 'done');
-
-      if (placeInfo.overall_star_rating) {
-        subtitle += `\nRated ${placeInfo.overall_star_rating}`;
-      }
-      
-      if (placeInfo.price_range) {
-        subtitle += `\n${placeInfo.price_range}`; 
-      }
-
-      if (placeInfo.hours) {
-        let hours = getFormattedHours(placeInfo.hours);        
-        subtitle += `\nOpen Hours: ${hours.open_time} - ${hours.close_time}`;
-      }    
-
-      if (placeInfo.photos) {            
-        logUserState(ps_user_id, 'photos', placeInfo.photos.data);
-      }
-
-      message_payload = {
-        elements: [
-          {
-            "title": placeInfo.name,
-            "image_url": placeInfo.cover.source,
-            "subtitle": subtitle,
-            "buttons":[
-              {
-                "type":"phone_number",
-                "title":"Call",
-                "payload": placeInfo.phone.replace(/\D/g, '')
-              },
-              {
-                "type":"web_url",
-                "title":"View Website",
-                "url": placeInfo.website
-              },
-              {
-                "type":"web_url",
-                "title":"See Photos",
-                "url": "https://porcupo.net/alex",
-                "messenger_extensions": true
-              }              
-            ]      
-          }
-        ]
-      }
-
-      sendMessage(ps_user_id, 'generic template', message_payload);
-    })
+    getPlaceInfo(pageId, placeInfo => sendPlaceInfo(ps_user_id))
   }
 }
 
@@ -383,12 +372,21 @@ function postSenderAction (sender_action, ps_user_id, callback) {
   })
 }
 
-function getUserInfo (ps_user_id, callback) {
+function handleNewUser (ps_user_id) {
   let user_fields = 'first_name, last_name, timezone, is_payment_enabled';
   let uri = `${graph_api_uri}/v2.6/${ps_user_id}?field=${user_fields}&access_token=${page_token}`;
   
   request.get(uri, (err, res, body) => {
-    callback(JSON.parse(body));
+    let user_info = JSON.parse(body);
+    let user_name = user_info.first_name;
+    
+    logUserState(ps_user_id, 'state', 'new');
+    logUserState(ps_user_id, 'user_info', user_info);
+    
+    message_payload = {
+      text: `Hi, ${user_name}! I'm the PlacesBot. I can find businesses near you. Wanna get started?`        
+    }
+    sendMessage(ps_user_id, 'text', message_payload);
   });
 }
 
@@ -524,7 +522,7 @@ function verifyRequestSignature(req, res, buf) {
   }
 }
 
-function getFormattedHours(hours) {
+function formatHours(hours) {
   let day_of_week = getDayOfWeek();
   let open_time = hours[day_of_week + '_1_open'];
   let close_time = hours[day_of_week + '_1_close'];
@@ -590,8 +588,8 @@ function decryptExtensionsRequest (hash) {
   let payload = Buffer.from(request[1], 'base64').toString('ascii')
 
   let expected_signature = crypto.createHmac('sha256', app_secret)
-                            .update(request[1])
-                            .digest('hex');
+                                  .update(request[1])
+                                  .digest('hex');
   // Confirm the signature
   if (signature !== expected_signature) {
     error_log('Bad Signed JSON signature!');
@@ -600,6 +598,8 @@ function decryptExtensionsRequest (hash) {
 
   return payload;
 }
+
+
 
 app.get('/pictures', (req, res) => {
   let hash = req.query.hash;
@@ -642,9 +642,8 @@ console.log('GET PHOTO');
   
 })
 
-
 app.use('/', 
-  (req, res, next) => {    
+  (req, res, next) => {
     let referer = req.get('Referer');
     if (referer.indexOf('www.messenger.com') >= 0) {
       res.setHeader('X-Frame-Options', 'ALLOW-FROM https://www.messenger.com/');
@@ -656,3 +655,6 @@ app.use('/',
   express.static(__dirname + '/www')
 );
 
+app.get('/log', (req, res) => {
+  console.log(req.query)
+})
