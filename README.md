@@ -40,4 +40,7 @@ The PlacesBot is designed to collect a set of inputs from the conversation, then
 16. The PlacesBot API uses the PSID from the decrypted `signed_request` to look up the place the user selected in cache.
 17. PlacesBot retrieves photos for the place from the Places Graph and returns them to the website.
 18. The website renders a photo gallery in the webview.
-14.
+19. The person begins a new search by sending a greeting to PlacesBot.
+20. PlacesBot asks if the person wants to search from their last provided location.
+21. If the Messenger Platform's built-in NLP returns an affirmative response, PlacesBot retrieves the person's last location from cache. If a negative response is returned, PlacesBot sends a location quick reply to get the person's new location.
+22. Lather, rinse, and repeat the search process!
