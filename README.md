@@ -16,7 +16,17 @@ The PlacesBot is a simple bot built on the [Facebook Messenger Platform](develop
 - Sender actions
 - List template
 - Generic template
-- Built-in Natural Language Processing
+- Built-in Natural Language Processing (NLP)
+- Webhook events: `messages`, `messaging_postbacks`
+
+## Requirements
+
+To get PlacesBot running, you'll need the following:
+
+- A server running node.js, like Heroku or an EC2 instance, to host your webhook. This will also host `index.html`, which serves the picture gallery.
+- A Facebook page.
+- A Facebook app with the Messenger Platform enabled, a webhook properly configured, and built-in NLP enabled.
+- A [Wit.ai](https://wit.ai/) account. The Messenger Platform's built-in NLP performs basic language detection, but you'll need to create three additional intents.
 
 ## Conversation Flow
 
