@@ -11,8 +11,8 @@ const
   app_token = process.env.APP_TOKEN,
   app_secret = process.env.APP_SECRET,
   page_token = process.env.PAGE_TOKEN,
-  validation_token = process.env.VALIDATION_TOKEN,
-  page_id = process.env.PAGE_ID;  
+  validation_token = process.env.VALIDATION_TOKEN
+  webview_url = process.env.WEBVIEW_URL; 
 
 const 
   graph_api_uri = 'https://graph.facebook.com', 
@@ -288,49 +288,49 @@ function handleAttachmentMessage (ps_user_id, messagingEvent) {
 }
 
 
-function sendPlaceInfo(ps_user_id) {
-  let subtitle = `${placeInfo.location.street}`
+function sendPlaceInfo(ps_user_id, place_info) {
+  let subtitle = `${place_info.location.street}`
 
   logUserState(ps_user_id, 'state', 'done');
 
-  if (placeInfo.overall_star_rating) {
-    subtitle += `\nRated ${placeInfo.overall_star_rating}`;
+  if (place_info.overall_star_rating) {
+    subtitle += `\nRated ${place_info.overall_star_rating}`;
   }
   
-  if (placeInfo.price_range) {
-    subtitle += `\n${placeInfo.price_range}`; 
+  if (place_info.price_range) {
+    subtitle += `\n${place_info.price_range}`; 
   }
 
-  if (placeInfo.hours) {
-    let hours = formatHours(placeInfo.hours);        
+  if (place_info.hours) {
+    let hours = formatHours(place_info.hours);        
     subtitle += `\nOpen Hours: ${hours.open_time} - ${hours.close_time}`;
   }    
 
-  if (placeInfo.photos) {            
-    logUserState(ps_user_id, 'photos', placeInfo.photos.data);
+  if (place_info.photos) {            
+    logUserState(ps_user_id, 'photos', place_info.photos.data);
   }
 
   message_payload = {
     elements: [
       {
-        "title": placeInfo.name,
-        "image_url": placeInfo.cover.source,
+        "title": place_info.name,
+        "image_url": place_info.cover.source,
         "subtitle": subtitle,
         "buttons":[
           {
             "type":"phone_number",
             "title":"Call",
-            "payload": placeInfo.phone.replace(/\D/g, '')
+            "payload": place_info.phone.replace(/\D/g, '')
           },
           {
             "type":"web_url",
             "title":"View Website",
-            "url": placeInfo.website
+            "url": place_info.website
           },
           {
             "type":"web_url",
             "title":"See Photos",
-            "url": "https://porcupo.net/alex",
+            "url": webview_url,
             "messenger_extensions": true
           }              
         ]      
@@ -348,7 +348,7 @@ function handlePostback(ps_user_id, messagingEvent) {
     handleNewUser(ps_user_id);    
   } else {
     let pageId = messagingEvent.postback.payload;    
-    getPlaceInfo(pageId, placeInfo => sendPlaceInfo(ps_user_id))
+    getPlaceInfo(pageId, place_info => sendPlaceInfo(ps_user_id, place_info))
   }
 }
 
