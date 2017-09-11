@@ -11,7 +11,7 @@ const
   app_token = process.env.APP_TOKEN,
   app_secret = process.env.APP_SECRET,
   page_token = process.env.PAGE_TOKEN,
-  validation_token = process.env.VALIDATION_TOKEN
+  validation_token = process.env.VALIDATION_TOKEN,
   webview_url = process.env.WEBVIEW_URL; 
 
 const 
