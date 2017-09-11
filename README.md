@@ -27,6 +27,13 @@ To get PlacesBot running, you'll need the following:
 - A Facebook page.
 - A Facebook app with the Messenger Platform enabled, a webhook properly configured, and built-in NLP enabled.
 - A [Wit.ai](https://wit.ai/) account. The Messenger Platform's built-in NLP performs basic language detection, but you'll need to create three additional intents.
+- The following server-side environment variables, for example in your `bash_profile`:
+  - **APP_TOKEN**: Your app token.
+  - **APP_SECRET**: Your app secret.
+  - **PAGE_TOKEN**: Your page token.
+  - **VALIDATION_TOKEN**: Your validation token for the webhook challenge.
+  - **WEBVIEW_URL**: The URL to open in the webview. 
+
 
 ## Conversation Flow
 
