@@ -309,7 +309,7 @@ function sendPlaceInfo(ps_user_id, place_info) {
   if (place_info.photos) {            
     logUserState(ps_user_id, 'photos', place_info.photos.data);
   }
-
+console.log(webview_url);
   message_payload = {
     elements: [
       {
@@ -645,12 +645,14 @@ console.log('GET PHOTO');
 app.use('/', 
   (req, res, next) => {
     let referer = req.get('Referer');
-    if (referer.indexOf('www.messenger.com') >= 0) {
-      res.setHeader('X-Frame-Options', 'ALLOW-FROM https://www.messenger.com/');
-    } else if (referer.indexOf('www.facebook.com') >= 0) {
-      res.setHeader('X-Frame-Options', 'ALLOW-FROM https://www.facebook.com/');
+    if (referer) {
+      if (referer.indexOf('www.messenger.com') >= 0) {
+        res.setHeader('X-Frame-Options', 'ALLOW-FROM https://www.messenger.com/');
+      } else if (referer.indexOf('www.facebook.com') >= 0) {
+        res.setHeader('X-Frame-Options', 'ALLOW-FROM https://www.facebook.com/');
+      }
     }
-    next();
+    next(); 
   }, 
   express.static(__dirname + '/www')
 );
